@@ -1,0 +1,46 @@
+.ant-layout .ant-layout {
+    position: relative;
+    overflow: hidden;
+}
+
+.filter {
+    display: inline-block;
+    margin: 0 10px;
+    position: absolute;
+    bottom: 10px;
+    height: 94px;
+}
+
+.filter button {
+    width: 60px;
+}
+
+.filter-condition {
+    display: inline-block;
+}
+
+.filter-condition p {
+    margin: 10px;
+}
+
+.filter-condition p > span{
+    width: 200px;
+}
+
+.filter-action {
+    margin: 0 5px;
+    display: inline-block;
+    height: 100%;
+    vertical-align: top;
+    line-height: 94px;
+}
+
+.filter-action button {
+    width: 50px;
+    height: 50px;
+}
+
+span.ant-avatar {
+    width: 24px;
+    height: 24px;
+}

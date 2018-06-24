@@ -1,0 +1,5 @@
+{
+    "connectionString": "mongodb://localhost:27017/pm-app",
+    "localUrl": "http://localhost:3001/api",
+    "secret": "THIS IS A GREAT APP"
+}

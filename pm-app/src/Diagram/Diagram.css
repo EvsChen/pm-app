@@ -1,0 +1,27 @@
+#holder {
+  left: 0;
+  top: 0;
+  touch-action: none;
+  position: absolute;
+}
+
+#addFlow {
+    position: absolute;
+    left: 300px;
+    bottom: 20px;
+    width: 60px;
+    height: 30px;
+}
+
+#saveFlow {
+  position: absolute;
+  left: 230px;
+  bottom: 20px;
+  width: 60px;
+  height: 30px;
+}
+
+.diagram-container {
+  position: relative;
+  overflow-x: auto;
+}
