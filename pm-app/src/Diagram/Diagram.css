@@ -25,3 +25,26 @@
   position: relative;
   overflow-x: auto;
 }
+
+.cell-popover {
+  font-size: 30px;
+  background-color: rgba(255, 255, 255, 0.7);
+  width: 120px;
+  height: 50px;
+  position: absolute;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 5px;
+}
+
+.cell-popover .action i {
+  margin: 5px;
+}
+
+.cell-popover .anticon-close {
+  font-size: 15px;
+  cursor: pointer;
+  position: absolute;
+  right: 5px;
+  top: 5px;
+}

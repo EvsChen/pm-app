@@ -7,7 +7,8 @@ const api = {
     registerUser : buildApi('/users/create'),
     authenticateUser: buildApi('/users/authenticate'),
     createTask: buildApi('/tasks/create'),
-    getTask: buildApi('/tasks/get')
+    getTask: buildApi('/tasks/get'),
+    removeTask: buildApi('/tasks/remove')
 };
 
 export default api;

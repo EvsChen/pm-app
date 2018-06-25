@@ -4,7 +4,21 @@ const TaskService = require('../../services/tasks');
 
 router.post('/create', create);
 router.post('/get', get);
+router.post('/remove', remove);
 module.exports = router;
+
+function remove(req, res) {
+  if (req.body) {
+    TaskService.remove(req.body.id)
+      .then(result => {
+        res.status(200).send(result);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(400).send(err);
+      })
+  }
+}
 
 function create(req, res) {
   if (req.body) {
