@@ -15,7 +15,7 @@ const taskSchema = new Schema({
       required: true,
     },
     positionX: Number,
-    positioY: Number,
+    positionY: Number,
     owner: Schema.Types.ObjectId,
     description: String,
     startDate: Date,
@@ -25,10 +25,12 @@ const Task = mongoose.model('Task',taskSchema);
 
 module.exports = {
   create,
+  update,
   getByCreator
 };
 
 function create(params) {
+    console.log(params);
     const deferred = Q.defer();
     const doc = new Task(params);
     doc.save((err, res) => {
@@ -40,10 +42,22 @@ function create(params) {
     return deferred.promise;
 }
 
+function update(params) {
+  const deferred = Q.defer();
+  if (params._id) {
+    Task.update({ _id: params.id }, { $set: params }, (err) => {
+      if (err) deferred.reject(err.name + ': ' + err.message);
+      else deferred.resolve();
+    })
+  }
+  return deferred.promise;
+}
+
 function getByCreator(id) {
   const deferred = Q.defer();
   Task.find({creator: id}, (err, res) => {
     if (err) deferred.reject(err.name + ': ' + err.message);
     else deferred.resolve(res);
   });
+  return deferred.promise;
 }

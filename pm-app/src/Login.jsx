@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import { Link } from 'react-router-dom';
+import { CurrentUserContext } from './context';
 
 import api from './api';
 const FormItem = Form.Item;
@@ -11,17 +12,17 @@ class NormalLoginForm extends React.Component {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        fetch(api.authenticateUser, {
-            method: 'POST',
-            headers: new Headers({
-            }),
-            body: JSON.stringify(values)
-        })
-            .then((res) => {
-                if (res.status === 200) {
-                    this.props.history.push("/home");
-                }
-            })
+        axios.post(api.authenticateUser, values)
+          .then((res) => {
+              console.log(res);
+              this.props.logIn(res.data.id);
+              if (res.status === 200) {
+                  this.props.history.push("/home");
+              }
+          })
+          .catch((err) => {
+            console.error(err);
+          })
       }
     });
   }

@@ -1,8 +1,11 @@
 import React from 'react';
 import { Button, Modal, Form, Input, Radio, DatePicker, Select } from 'antd';
+import _ from 'lodash';
 import axios from 'axios';
 import moment from 'moment';
 
+import api from '../api';
+import { CurrentUserContext } from '../context';
 import './Diagram.css';
 import './Joystick.css';
 
@@ -148,7 +151,7 @@ class Diagram extends React.Component {
   constructor(props) {
     super(props);
     this.graph = {};
-    this.tasks = [];
+    this.tasks = {};
     this.state = {
       visible: false,
       confirmLoading: false
@@ -161,6 +164,37 @@ class Diagram extends React.Component {
     })
   }
 
+  buildRect = (taskParams) => {
+    const joint = window.joint;
+    taskParams.positionX = taskParams.positionX || 30;
+    taskParams.positionY = taskParams.positionY || 30;
+    const rect =
+      new joint.shapes.standard.Rectangle()
+        .position(taskParams.positionX, taskParams.positionY)
+        .resize(100, 40)
+        .attr({
+          body: {
+            fill: 'blue',
+            'stroke-opacity': .7
+          },
+          label: {
+            text: taskParams.title || 'init',
+            fill: 'white'
+          }
+        })
+        .addTo(this.graph);
+    this.tasks[rect.cid] = taskParams;
+    rect.on('change:position', (ele, pos) => {
+      if (this.tasks[ele.cid]) {
+        const task = this.tasks[ele.cid];
+        task.positionX = pos.x;
+        task.positionY = pos.y;
+        console.log(task);
+      }
+    });
+    return rect;
+  }
+
   onCreate = () => {
     // The modal closes in an async manner 
     this.setState({
@@ -170,23 +204,7 @@ class Diagram extends React.Component {
     form.validateFields((err, values) => {
       if (err) return;
       console.log(values);
-      
-      const joint = window.joint;
-      const rect =
-        new joint.shapes.standard.Rectangle()
-          .position(100, 30)
-          .resize(100, 40)
-          .attr({
-            body: {
-              fill: 'blue',
-              'stroke-opacity': .7
-            },
-            label: {
-              text: values.title,
-              fill: 'white'
-            }
-          })
-          .addTo(this.graph);
+      this.buildRect(values);
       this.setState({
         visible: false,
         confirmLoading: false
@@ -215,22 +233,14 @@ class Diagram extends React.Component {
       drawGrid: true
     });
     this.paper = paper;
-    const rect = new joint.shapes.standard.Rectangle();
-    rect.position(100, 30);
-    rect.resize(100, 40);
-    rect.attr({
-      body: {
-        fill: 'blue',
-        'stroke-opacity': .7
-      },
-      label: {
-        text: 'Hello',
-        fill: 'white'
-      }
-    });
-    const rect2 = rect.clone().translate(100, 100).attr('label/text', 'World!');
-    graph.addCells([rect, rect2]);
-
+    axios.post(api.getTask, { id: this.props.userId })
+      .then(res => {
+        if (res.data.length > 0) {
+          res.data.forEach(task => {
+            this.buildRect(task);
+          });
+        }
+      });
     paper.on('cell:pointerup', (cellView, evt, x, y) => {
       // Find the first element below that is not a link nor the dragged element itself.
       const elementBelow = graph.get('cells').find(function (cell) {
@@ -261,8 +271,33 @@ class Diagram extends React.Component {
     this.formRef = formRef;
   }
 
+  // FIXME: after the creation the change of position seems not working
   saveFlow = () => {
+    console.log(this.tasks);
+    const payload = {
+      id: this.props.userId,
+      tasks: []
+    };
+    _.forIn(this.tasks, (task) => {
+      payload.tasks.push(this.filterData(task));
+    });
+    console.log(payload);
+    axios.post(api.createTask, payload)
+      .then(() => {
+        console.log('success');
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
 
+  filterData = task => {
+    const newTask = _.omitBy(task, (val, key) => {
+      if (!val) return true;
+      else if (key === 'modifier') return true;
+      else return false;
+    });
+    return newTask;
   }
 
   // TODO: Add custom scroll stick 摇杆
@@ -293,8 +328,12 @@ class Diagram extends React.Component {
           onClick={this.saveFlow}>Save</Button>
         <Joystick />
       </React.Fragment>
-    );
+    )
   }
 }
 
-export default Diagram;
+export default props => (
+  <CurrentUserContext.Consumer>
+    {({ id }) => <Diagram {...props} userId={id} />}
+  </CurrentUserContext.Consumer>
+);

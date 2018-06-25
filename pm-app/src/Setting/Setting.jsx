@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from 'antd';
 import './Setting.css';
+import { CurrentUserContext } from '../context';
 
 class Setting extends React.Component {
   logOut = () => {
@@ -9,16 +10,20 @@ class Setting extends React.Component {
 
   render() {
     return (
-      <React.Fragment>
-        <div id="logOut">
-          <Button
-            id="logOutButton"
-            type="primary"
-            onClick={this.logOut}>
-            Log Out
+      <CurrentUserContext.Consumer>
+        {({ logOut }) => (
+          <React.Fragment>
+          <div id="logOut">
+            <Button
+              id="logOutButton"
+              type="primary"
+              onClick={this.logOut}>
+              Log Out
           </Button>
-        </div>
-      </React.Fragment>
+          </div>
+        </React.Fragment>
+        )}
+        </CurrentUserContext.Consumer>
     )
   }
 }

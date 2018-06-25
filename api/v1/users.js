@@ -10,7 +10,7 @@ function authenticate(req, res) {
     if (req.body) {
         UserService.authenticate(req.body.username, req.body.password)
             .then(token => {
-                res.status(200).send({token});
+                res.status(200).send(token);
             })
             .catch(err => {
                 res.status(400).send(err);

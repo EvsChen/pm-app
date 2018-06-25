@@ -62,7 +62,7 @@ function authenticate(username, password) {
         if (err) deferred.reject(err.name + ': ' + err.message);
         if (user && bcrypt.compareSync(password, user.hash)) {
             // authentication successful
-            deferred.resolve(jwt.sign({ sub: user._id, role: user.role, firstName: user.firstName }, config.secret));
+            deferred.resolve({ id: user._id, role: user.role, firstName: user.firstName });
         } else {
             // authentication failed
             deferred.reject();
