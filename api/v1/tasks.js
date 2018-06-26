@@ -4,8 +4,24 @@ const TaskService = require('../../services/tasks');
 
 router.post('/create', create);
 router.post('/get', get);
+router.post('/getRoot', getRoot);
+router.post('/getByRoot', getByRoot);
 router.post('/remove', remove);
+router.post('/query', query);
 module.exports = router;
+
+function query(req, res) {
+  if (req.body) {
+    TaskService.query(req.body.query)
+      .then(result => {
+        res.status(200).send(result);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(400).send(err);
+      });
+  }
+}
 
 function remove(req, res) {
   if (req.body) {
@@ -16,7 +32,7 @@ function remove(req, res) {
       .catch(err => {
         console.log(err);
         res.status(400).send(err);
-      })
+      });
   }
 }
 
@@ -25,7 +41,6 @@ function create(req, res) {
     console.log(req.body);
     const promiseArr = [];
     req.body.tasks.forEach((task) => {
-      task.creator = req.body.id;
       if (task._id) {
         // update task
         promiseArr.push(new Promise((resolve, reject) => {
@@ -41,8 +56,8 @@ function create(req, res) {
       else {
         promiseArr.push(new Promise((resolve, reject) => {
           TaskService.create(task)
-            .then(() => {
-              resolve();
+            .then(res => {
+              resolve(res);
             })
             .catch(err => {
               reject(err);
@@ -63,6 +78,30 @@ function create(req, res) {
 function get(req, res) {
   if (req.body) {
     TaskService.getByCreator(req.body.id)
+      .then(taskArr => {
+        res.status(200).send(taskArr)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  }
+}
+
+function getRoot(req, res) {
+  if (req.body) {
+    TaskService.getRoot(req.body.id)
+      .then(taskArr => {
+        res.status(200).send(taskArr)
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
+  }
+}
+
+function getByRoot(req, res) {
+  if (req.body) {
+    TaskService.getByRoot(req.body.id)
       .then(taskArr => {
         res.status(200).send(taskArr)
       })

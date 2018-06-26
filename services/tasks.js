@@ -20,15 +20,39 @@ const taskSchema = new Schema({
   description: String,
   startDate: Date,
   endDate: Date,
+  parent: Schema.Types.ObjectId,
+  children: [Schema.Types.ObjectId],
+  linkTo: [Schema.Types.ObjectId],
+  isRoot: {
+    type: Boolean,
+    default: false
+  }
 });
 const Task = mongoose.model('Task', taskSchema);
 
 module.exports = {
+  query,
   create,
   update,
   remove,
-  getByCreator
+  getByCreator,
+  getByRoot,
+  getRoot
 };
+
+
+/**
+ * 
+ * @param {Object} queryObj object of the query params 
+ */
+function query(queryObj) {
+  const deferred = Q.defer();
+  Task.find(queryObj, (err, res) => {
+    if (err) deferred.reject(err.name + ': ' + err.message);
+    else deferred.resolve(res);
+  });
+  return deferred.promise;
+}
 
 function create(params) {
   console.log(params);
@@ -74,6 +98,29 @@ function update(params) {
 function getByCreator(id) {
   const deferred = Q.defer();
   Task.find({ creator: id }, (err, res) => {
+    if (err) deferred.reject(err.name + ': ' + err.message);
+    else deferred.resolve(res);
+  });
+  return deferred.promise;
+}
+
+function getRoot(id) {
+  const deferred = Q.defer();
+  Task.find({
+    creator: id,
+    isRoot: true
+  }, (err, res) => {
+    if (err) deferred.reject(err.name + ': ' + err.message);
+    else deferred.resolve(res);
+  });
+  return deferred.promise;
+}
+
+function getByRoot(id) {
+  const deferred = Q.defer();
+  Task.find({
+    parent: id,
+  }, (err, res) => {
     if (err) deferred.reject(err.name + ': ' + err.message);
     else deferred.resolve(res);
   });

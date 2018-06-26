@@ -2,9 +2,9 @@ import React from 'react';
 import axios from 'axios';
 import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import { Link } from 'react-router-dom';
-import { CurrentUserContext } from './context';
 
 import api from './api';
+import './Login.css';
 const FormItem = Form.Item;
 
 class NormalLoginForm extends React.Component {

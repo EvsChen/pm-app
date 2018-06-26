@@ -14,8 +14,7 @@ const { Sider } = Layout;
 
 class Home extends React.Component {
   state = {
-    // TODO: sidebar should be collapsed at first
-    collapsed: false,
+    collapsed: true,
     current: '1'
   }
 

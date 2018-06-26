@@ -6,6 +6,7 @@ module.exports = function override(config, env) {
         libraryDirectory: 'es',
         style: 'css' 
     }], config);
+    // config = injectBabelPlugin('styled-jsx/babel', config);
   // do stuff with the webpack config...
   return config;
 };

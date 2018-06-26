@@ -1,5 +1,6 @@
 const buildApi = (str) => {
-    const baseApi = 'http://localhost:3001/api/v1';
+    const baseApi = `http://${window.location.hostname}:3001/api/v1`;
+    console.log(`${baseApi}${str}`);
     return `${baseApi}${str}`;
 };
 
@@ -8,6 +9,9 @@ const api = {
     authenticateUser: buildApi('/users/authenticate'),
     createTask: buildApi('/tasks/create'),
     getTask: buildApi('/tasks/get'),
+    queryTask: buildApi('/tasks/query'),
+    getRootTask: buildApi('/tasks/getRoot'),
+    getByRootTask: buildApi('/tasks/getByRoot'),
     removeTask: buildApi('/tasks/remove')
 };
 

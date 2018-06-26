@@ -7,7 +7,6 @@
 
 #addFlow {
     position: absolute;
-    left: 300px;
     bottom: 20px;
     width: 60px;
     height: 30px;
@@ -15,10 +14,26 @@
 
 #saveFlow {
   position: absolute;
-  left: 230px;
   bottom: 20px;
   width: 60px;
   height: 30px;
+}
+
+.root-task-select {
+  position: absolute;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  z-index: 999;
+}
+
+.root-task-select .ant-select {
+  vertical-align: top;
+}
+
+.root-task-select i {
+  font-size: 20px;
+  margin-left: 20px;
+  line-height: 32px;
 }
 
 .diagram-container {
@@ -47,4 +62,8 @@
   position: absolute;
   right: 5px;
   top: 5px;
+}
+
+.first-add-p {
+  margin-top: 200px;
 }

@@ -72,6 +72,7 @@ class App extends Component {
         <CurrentUserContext.Provider value={this.state.user}>
           <div className="App">
             <PrivateRoute path="/home" component={Main} />
+            <PrivateRoute exact path="/" component={Main} />            
             <Route
               path="/login"
               render={(props) => <Login {...props} logIn={this.logIn}/>}
