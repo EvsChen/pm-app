@@ -81,10 +81,15 @@ class Joystick extends React.Component {
   }
 }
 
+// FIXME: consider changing date into 12:00 AM
 class AddTask extends React.Component {
   onChange = (dates, dateStrings) => {
     console.log('From: ', dates[0], ', to: ', dates[1]);
     console.log('From: ', dateStrings[0], ', to: ', dateStrings[1]);
+  }
+
+  componentDidUpdate() {
+    console.log('modal updated');
   }
 
   render() {
@@ -163,7 +168,10 @@ class Diagram extends React.Component {
       confirmLoading: false,
       showPopover: false,
       popoverX: 0,
-      popoverY: 0
+      popoverY: 0,
+      modal: {
+        isEdit: false,
+      }
     }
   }
 
@@ -189,7 +197,7 @@ class Diagram extends React.Component {
   showModal = () => {
     this.setState({
       visible: true
-    })
+    });
   }
 
   showRemoveModal = () => {
@@ -349,21 +357,37 @@ class Diagram extends React.Component {
     console.log(graph);
     console.log(paper);
 
-    paper.on('cell:pointerdown', (cellView, evt, x, y) => {
-      const interval = setTimeout(() => {
-        console.log(cellView);
+    paper.on('cell:pointerdown', (cellView, evt, evtX, evtY) => {
+      console.log(cellView);
+      if (cellView && cellView.model) {
+        const { x: cellX, y: cellY } = cellView.model.attributes.position;
+        const { width, height } = cellView.model.attributes.size;
+        const popoverWidth = 120;
+        const popoverHeight = 50;
+        const centerX = cellX + width / 2;
+        const centerY = cellY + height / 2;
+        const margin = 5;
+        // TODO: consider the popover outside screen
+        const popoverX = cellX;
+        const popoverY = evtY > centerY
+          // evtY > centerY: display below the cell
+          ? cellY + margin + height
+          // else: display above the cell;
+          : cellY - margin - popoverHeight;
         this.setState({
           showPopover: true,
-          popoverX: x,
-          popoverY: y
+          popoverX,
+          popoverY
         });
         this.removeTask = this.removeTask.bind(this, this.tasks[cellView.model.cid]);
-      }, 1000);
-      paper.on('cell:pointerup', (cellView, evt, x, y) => {
-        if (interval) {
-          clearInterval(interval);
+        // FIXME: better way to write?
+        function onBlankPointerDown(evt, x, y) {
+          this.closePopover();
+          paper.off('blank:pointerdown', onBlankPointerDown);
         }
-      })
+        onBlankPointerDown = onBlankPointerDown.bind(this);
+        paper.on('blank:pointerdown', onBlankPointerDown);
+      }
     });
 
     paper.on('cell:pointerup', (cellView, evt, x, y) => {
@@ -422,7 +446,7 @@ class Diagram extends React.Component {
               task.linkTo.forEach(id => {
                 const targetTask = this.getTaskById(id);
                 if (targetTask) {
-                  this.connectLink(task.rect, targetTask.rect);                  
+                  this.connectLink(task.rect, targetTask.rect);
                 }
               });
             }
@@ -487,6 +511,8 @@ class Diagram extends React.Component {
       <React.Fragment>
         <AddTaskModal
           id="addTaskModal"
+          isEdit={this.state.modal.isEdit}
+          editId={this.state.modal.editId}
           wrappedComponentRef={this.saveFormRef}
           visible={this.state.visible}
           onCreate={this.onCreate}

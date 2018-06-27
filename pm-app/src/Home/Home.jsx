@@ -12,8 +12,15 @@ const { Meta } = Card;
 const Option = Select.Option;
 
 class Index extends React.Component {
-  state = {
-    tasks: []
+  constructor(props) {
+    super(props);
+    this.state = {
+      tasks: []
+    };
+  }
+
+  componentDidMount() {
+    this.handleChange('day');
   }
 
   handleError = err => {
@@ -21,78 +28,40 @@ class Index extends React.Component {
   }
 
   handleChange = (value) => {
-    switch (value) {
-      case 'today':
-        axios.post(api.queryTask, {
-          query: {
-            creator: this.props.userId,
-            endDate: {
-              $gte: moment().startOf('day'),
-              $lte: moment().endOf('day')
-            }
-          }
-        })
-          .then(res => {
-            this.setState({
-              tasks: res.data
-            });
-          })
-          .catch(err => {
-            this.handleError(err);
-          });
-        break;
-      case 'week':
-        axios.post(api.queryTask, {
-          query: {
-            creator: this.props.userId,
-            endDate: {
-              $gte: moment().startOf('week'),
-              $lte: moment().endOf('week')
-            }
-          }
-        })
-          .then(res => {
-            this.setState({
-              tasks: res.data
-            });          })
-          .catch(err => {
-            this.handleError(err);
-          });
-        break;
-      case 'month':
-        axios.post(api.queryTask, {
-          query: {
-            creator: this.props.userId,
-            endDate: {
-              $gte: moment().startOf('month'),
-              $lte: moment().endOf('month')
-            }
-          }
-        })
-          .then(res => {
-            this.setState({
-              tasks: res.data
-            });          })
-          .catch(err => {
-            this.handleError(err);
-          });
-    }
+    axios.post(api.queryTask, {
+      query: {
+        creator: this.props.userId,
+        endDate: {
+          $gte: moment().startOf(value),
+          $lte: moment().endOf(value)
+        }
+      }
+    })
+      .then(res => {
+        this.setState({
+          tasks: res.data
+        });
+      })
+      .catch(err => {
+        this.handleError(err);
+      });
   }
 
   render() {
     return (
       <React.Fragment>
         <Header style={{ background: '#fff', padding: 0 }}>
-          <Select defaultValue="lucy" style={{ width: 120 }} onChange={this.handleChange}>
-            <Option value="today">Today</Option>
+          <Select defaultValue="today" style={{ width: 120 }} onChange={this.handleChange}>
+            <Option value="day">Today</Option>
             <Option value="week">This Week</Option>
             <Option value="month">This Month</Option>
           </Select>
         </Header>
+        {/* The scrolling only resctricts to content  */}
         <Content style={{ margin: '0 16px' }}>
           {
-            this.state.tasks && this.state.tasks.map(task => 
-              <TaskCard task={task} key={task._id}/>
+            this.state.tasks && this.state.tasks.map(task =>
+              <TaskCard task={task} key={task._id} />
             )
           }
         </Content>

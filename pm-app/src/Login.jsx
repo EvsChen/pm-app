@@ -7,6 +7,7 @@ import api from './api';
 import './Login.css';
 const FormItem = Form.Item;
 
+// TODO: automatic login
 class NormalLoginForm extends React.Component {
   handleSubmit = (e) => {
     e.preventDefault();
