@@ -44,8 +44,6 @@
 .cell-popover {
   font-size: 30px;
   background-color: rgba(255, 255, 255, 0.7);
-  width: 120px;
-  height: 50px;
   position: absolute;
   border: 1px solid rgba(0, 0, 0, 0.3);
   border-radius: 10px;

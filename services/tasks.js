@@ -26,7 +26,8 @@ const taskSchema = new Schema({
   isRoot: {
     type: Boolean,
     default: false
-  }
+  },
+  organization: Schema.Types.Mixed
 });
 const Task = mongoose.model('Task', taskSchema);
 

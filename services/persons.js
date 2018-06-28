@@ -1,12 +1,15 @@
+/**
+ * @file services/persons.js - this file provides services to manipulate with the person database
+ */
 const Q = require('q');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 
-const config = require('../config.json');
 const mongoose = require('./mongo-connection');// pack mongoose connection into one module
 const Schema = mongoose.Schema;
-const userSchema = new Schema({
+const personSchema = new Schema({
+    // the user id here is used to link to the user database
+    // but the id is not necessary
+    userId: Schema.Types.ObjectId,
     firstName: {
         type: String,
         required: true
@@ -16,55 +19,60 @@ const userSchema = new Schema({
         required: true
     },
     department: String, 
-    role: String,
-    email: String, 
+    email: String,
+    position: String
 });
-const User = mongoose.model('User',userSchema);
+const Person = mongoose.model('Person', personSchema);
 
-const service = {};
-service.create = create;
-service.authenticate = authenticate;
-module.exports = service;
+module.exports = {
+  create,
+  remove,
+  update,
+  query
+};
 
-function create(userParam) {
-    var deferred = Q.defer();
-    // validation    
-    User.find({ username: userParam.username }, (err, userList) => {
+function create(params) {
+  console.log(params);
+  const deferred = Q.defer();
+  const doc = new Person(params);
+  doc.save((err, res) => {
+    if (err) deferred.reject(err.name + ': ' + err.message);
+    else deferred.resolve(res);
+  });
+  return deferred.promise;
+}
+
+function update(params) {
+  const deferred = Q.defer();
+  if (params._id) {
+    Task.findByIdAndUpdate(
+      params._id,
+      { $set: _.omit(params, '_id') },
+      { new: true },
+      (err, updatedTask) => {
         if (err) deferred.reject(err.name + ': ' + err.message);
-        if (userList.length > 0) {
-            deferred.reject(`Username ${userParam.username} is already taken`);
-        } else {
-            createUser();
-        }
-    });
-
-    function createUser() {
-        // set user object to userParam without the cleartext password
-        // add hashed password to user object
-        const user = new User(_.omit(userParam, 'password'));
-        user.hash = bcrypt.hashSync(userParam.password, 10);
-        user.save((err, res) => {
-            if (err) deferred.reject(err.name + ': ' + err.message);
-            else {
-                deferred.resolve(res);
-            }
-        });
-    }
-    return deferred.promise;
+        else deferred.resolve(updatedTask);
+      });
+  }
+  return deferred.promise;
 }
 
 
-function authenticate(username, password) {
-    const deferred = Q.defer();
-    User.findOne({ username: username }, function (err, user) {
-        if (err) deferred.reject(err.name + ': ' + err.message);
-        if (user && bcrypt.compareSync(password, user.hash)) {
-            // authentication successful
-            deferred.resolve(jwt.sign({ sub: user._id, role: user.role, firstName: user.firstName }, config.secret));
-        } else {
-            // authentication failed
-            deferred.reject();
-        }
-    });
-    return deferred.promise;
+function query(queryObj) {
+  const deferred = Q.defer();
+    Person.find(queryObj, (err, res) => {
+    if (err) deferred.reject(err.name + ': ' + err.message);
+    else deferred.resolve(res);
+  });
+  return deferred.promise;
 }
+
+function remove(id) {
+  const deferred = Q.defer();
+  Person.findByIdAndRemove(id, (err, res) => {
+    if (err) deferred.reject(err.name + ': ' + err.message);
+    else deferred.resolve(res);
+  });
+  return deferred.promise;
+}
+

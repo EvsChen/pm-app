@@ -8,11 +8,16 @@ const api = {
     registerUser : buildApi('/users/create'),
     authenticateUser: buildApi('/users/authenticate'),
     createTask: buildApi('/tasks/create'),
+    updateTask: buildApi('/tasks/update'),
+    removeTask: buildApi('/tasks/remove'),
     getTask: buildApi('/tasks/get'),
     queryTask: buildApi('/tasks/query'),
     getRootTask: buildApi('/tasks/getRoot'),
     getByRootTask: buildApi('/tasks/getByRoot'),
-    removeTask: buildApi('/tasks/remove')
+    createPerson: buildApi('/persons/create'),
+    updatePerson: buildApi('/persons/update'),
+    queryPerson: buildApi('/persons/query'),
+    removePerson: buildApi('/persons/remove')
 };
 
 export default api;

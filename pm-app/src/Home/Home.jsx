@@ -29,12 +29,10 @@ class Index extends React.Component {
 
   handleChange = (value) => {
     axios.post(api.queryTask, {
-      query: {
-        creator: this.props.userId,
-        endDate: {
-          $gte: moment().startOf(value),
-          $lte: moment().endOf(value)
-        }
+      creator: this.props.userId,
+      endDate: {
+        $gte: moment().startOf(value),
+        $lte: moment().endOf(value)
       }
     })
       .then(res => {

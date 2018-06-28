@@ -1,8 +1,10 @@
 const express = require('express');
+const _ = require('lodash');
 const router = express.Router();
 const TaskService = require('../../services/tasks');
 
 router.post('/create', create);
+router.post('/update', update);
 router.post('/get', get);
 router.post('/getRoot', getRoot);
 router.post('/getByRoot', getByRoot);
@@ -12,7 +14,7 @@ module.exports = router;
 
 function query(req, res) {
   if (req.body) {
-    TaskService.query(req.body.query)
+    TaskService.query(req.body)
       .then(result => {
         res.status(200).send(result);
       })
@@ -72,6 +74,44 @@ function create(req, res) {
       .catch(err => {
         res.status(400).send(err);
       })
+  }
+}
+
+function update(req, res) {
+  if (req.body) {
+    if (req.body.tasks && _.isArray(req.body.tasks)) {
+      const promiseArr = [];
+      req.body.tasks.forEach((task) => {
+        promiseArr.push(new Promise((resolve, reject) => {
+          TaskService.update(task)
+            .then(res => {
+              resolve(res);
+            })
+            .catch(err => {
+              reject(err);
+            })
+        }));
+      });
+      Promise.all(promiseArr)
+        .then(resArr => {
+          res.status(200).send(resArr);
+        })
+        .catch(err => {
+          res.status(400).send(err);
+        })
+    }
+    else {
+      // TODO: make login consistent
+      if (req.body._id) {
+        TaskService.update(req.body)
+          .then(updatedTask => {
+            res.status(200).send(updatedTask);
+          })
+          .catch(err => {
+            res.status(400).send(err);
+          })
+      }
+    }
   }
 }
 

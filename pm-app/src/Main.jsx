@@ -6,7 +6,7 @@ import './Main.css';
 
 // Here imports the components from the home folder
 import Index from './Home/Home';
-import Organization from './Organization/Orgnization';
+import Organization from './Organization/Organization';
 import Diagram from './Diagram/Diagram';
 import Setting from './Setting/Setting';
 
@@ -64,7 +64,7 @@ class Home extends React.Component {
               </Link>
             </Menu.Item>
             <Menu.Item key="3">
-              <Link to={`${this.props.match.path}/orgnization`}>
+              <Link to={`${this.props.match.path}/organization`}>
                 <Icon type="user" />
                 <span>Organization</span>
               </Link>
@@ -92,7 +92,7 @@ class Home extends React.Component {
         <Layout>
           <Route exact path={`${this.props.match.path}`} component={Index} />
           <Route path={`${this.props.match.path}/diagram`} component={Diagram} />
-          <Route path={`${this.props.match.path}/orgnization`} component={Organization} />
+          <Route path={`${this.props.match.path}/organization`} component={Organization} />
           <Route path={`${this.props.match.path}/setting`} component={Setting} />
         </Layout>
       </Layout>

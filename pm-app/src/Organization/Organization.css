@@ -3,12 +3,16 @@
     overflow: hidden;
 }
 
+.ant-layout-content {
+  position: relative;
+}
+
 .filter {
     display: inline-block;
-    margin: 0 10px;
     position: absolute;
     bottom: 10px;
     height: 94px;
+    right: 0;
 }
 
 .filter button {

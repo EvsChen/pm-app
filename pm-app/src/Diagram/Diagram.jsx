@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Modal, Form, Input, Radio, DatePicker, Select, Icon, Spin } from 'antd';
 import _ from 'lodash';
+import moment from 'moment';
 import axios from 'axios';
 
 import api from '../api';
@@ -12,6 +13,10 @@ const FormItem = Form.Item;
 const confirm = Modal.confirm;
 const Option = Select.Option;
 const joint = window.joint;
+
+const POPOVER_WIDTH = 120;
+const POPOVER_HEIGHT = 50;
+const POPOVER_MARGIN = 5;
 
 // FIXME: restrict the position of joystick touch in the circle
 // TODO: consider separating Joystick into a file
@@ -83,35 +88,36 @@ class Joystick extends React.Component {
 
 // FIXME: consider changing date into 12:00 AM
 class AddTask extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
   onChange = (dates, dateStrings) => {
     console.log('From: ', dates[0], ', to: ', dates[1]);
     console.log('From: ', dateStrings[0], ', to: ', dateStrings[1]);
   }
 
-  componentDidUpdate() {
-    console.log('modal updated');
-  }
-
   render() {
     // Here we lift the visible state up, as well as the onCreate method
-    const { form, confirmLoading, visible, onCreate, onCancel } = this.props;
+    const { form, confirmLoading, visible, onCreate, onUpdate, onCancel, isEditModal } = this.props;
     const { getFieldDecorator } = form;
     return (
-      <Modal title="Add new task"
+      <Modal title={isEditModal ? 'Update task' : 'Create new task'}
         visible={visible}
-        onOk={onCreate}
+        onOk={isEditModal ? onUpdate : onCreate}
+        okText={isEditModal ? 'Update' : 'Create'}
         onCancel={onCancel}
         confirmLoading={confirmLoading}
         bodyStyle={{
           height: 400,
-          'overflowY': 'auto'
+          overflowY: 'auto'
         }}
         style={{ top: 50 }}
       >
         <Form layout="vertical">
           <FormItem label="Title">
             {getFieldDecorator('title', {
-              rules: [{ required: true, message: 'Please input the title of task!' }],
+              rules: [{ required: true, message: 'Please input the title of task!' }]
             })(
               <Input />
             )}
@@ -153,7 +159,27 @@ class AddTask extends React.Component {
   }
 }
 
-const AddTaskModal = Form.create()(AddTask);
+/**
+ * @param {Boolean} isEditModal 
+ * @param {Function} onUpdate
+ */
+const AddTaskModal = Form.create({
+  // This method maps modal props into form initial values
+  mapPropsToFields: (props) => {
+    const fieldObj = _.mapValues(props.modalTask, (val, key) => {
+      if (key === 'startDate' || key === 'endDate') {
+        return Form.createFormField({
+          value: moment(val)
+        })
+      }
+      return Form.createFormField({
+        value: val
+      })
+    });
+    console.log(fieldObj);
+    return fieldObj;
+  }
+})(AddTask);
 
 // TODO: consider the two-finger zooming: how to handle?
 class Diagram extends React.Component {
@@ -162,6 +188,7 @@ class Diagram extends React.Component {
     this.graph = {};
     this.tasks = {};
     this.state = {
+      canSave: false,
       loading: true,
       visible: false,
       removeModalVisible: false,
@@ -169,9 +196,8 @@ class Diagram extends React.Component {
       showPopover: false,
       popoverX: 0,
       popoverY: 0,
-      modal: {
-        isEdit: false,
-      }
+      isEditModal: false,
+      modalTask: {}
     }
   }
 
@@ -192,6 +218,96 @@ class Diagram extends React.Component {
       this.graph.clear();
       this.loadTasks();
     }
+  }
+
+  addTask = () => {
+    this.setState({
+      isEditModal: false,
+    });
+    this.showModal();
+  }
+
+  editTask = () => {
+    this.setState({
+      isEditModal: true
+    });
+    this.closePopover();
+    this.showModal();
+  }
+
+  removeTask = () => {
+    const task = this.state.modalTask;
+    if (task) {
+      if (task._id) {
+        axios.post(api.removeTask, {
+          id: task._id
+        })
+          .then(() => {
+            console.log('Remove successful');
+            this.removeTaskFromPaper(task);
+          })
+          .catch(err => {
+            console.log('Remove fail');
+          })
+      }
+      else {
+        this.removeTaskFromPaper(task);
+      }
+    }
+  }
+
+  /**
+   * add new tasks into database
+   * @param {(Object|Object[])} tasks - accept a single task or a task array
+   */
+  createTasks = tasks => {
+    console.log(tasks);
+    if (tasks) {
+      const payload = {
+        tasks: []
+      };
+      // tell if the task is a task or a task collection
+      // TODO: better way to distinguish
+      const taskArr = tasks.title ? [tasks] : tasks;
+      _.forIn(taskArr, task => {
+        task.creator = task.creator || this.props.userId;
+        task.parent = task.parent || this.props.rootTaskId;
+        payload.tasks.push(this.filterData(task));
+      });
+      console.log(payload);
+      return axios.post(api.createTask, payload);
+    }
+  }
+
+  /**
+   * add new tasks into database
+   * @param {(Object|Object[])} tasks - accept a single task or a task array
+   */
+  updateTasks = tasks => {
+    if (tasks) {
+      const payload = { tasks: [] };
+      // tell if the task is a task or a task collection
+      const taskArr = tasks.title ? [tasks] : tasks;
+      _.forIn(taskArr, task => {
+        task.creator = task.creator || this.props.userId;
+        task.parent = task.parent || this.props.rootTaskId;
+        payload.tasks.push(this.filterData(task));
+      });
+      console.log(payload);
+      return axios.post(api.updateTask, payload);
+    }
+  }
+
+  saveFlow = () => {
+    console.log(this.tasks);
+    this.createTasks(this.tasks)
+      .then((res) => {
+        console.log(res.data);
+        console.log('success');
+      })
+      .catch(err => {
+        console.error(err);
+      })
   }
 
   showModal = () => {
@@ -246,6 +362,9 @@ class Diagram extends React.Component {
       rect.on('change:position', (ele, pos) => {
         if (this.tasks[ele.cid]) {
           const task = this.tasks[ele.cid];
+          this.setState({
+            canSave: true
+          });
           task.positionX = pos.x;
           task.positionY = pos.y;
         }
@@ -281,6 +400,36 @@ class Diagram extends React.Component {
     return link;
   }
 
+  addToolsToLink = linkView => {
+    if (linkView.hasTools()) {
+      linkView.showTools();
+    }
+    else {
+      const tasks = this.tasks;
+      const setState = this.setState.bind(this);
+      const removeTool = new joint.linkTools.Remove({
+        action: function(evt) {
+          this.model.remove();
+          const sourceTask = tasks[this.sourceView.model.cid];
+          const targetTask = tasks[this.targetView.model.cid];
+          if (sourceTask.linkTo.indexOf(targetTask._id) !== -1) {
+            const ind = sourceTask.linkTo.indexOf(targetTask._id);
+            sourceTask.linkTo.splice(ind, 1);
+            setState({
+              canSave: true
+            });
+          }
+        }
+      });
+      // able to add multiple tools here
+      const toolsView = new joint.dia.ToolsView({
+        name: 'tools',
+        tools: [removeTool]
+      });
+      linkView.addTools(toolsView);
+    }
+  }
+
   onCreate = () => {
     // The modal closes in an async manner 
     this.setState({
@@ -307,8 +456,30 @@ class Diagram extends React.Component {
     });
   }
 
-  handleError = err => {
-    console.error(err);
+  // TODO: how to remove the links from the paper?
+  /**
+   * update the task when the modal closes
+   */
+  onUpdate = () => {
+    this.setState({
+      confirmLoading: true
+    });
+    const form = this.formRef.props.form;
+    // extend the original task values to the new one
+    form.validateFields((err, values) => {
+      if (err) return;
+      this.updateTasks(_.extend(this.state.modalTask, values))
+        .then(res => {
+          this.setState({
+            visible: false,
+            confirmLoading: false
+          });
+          this.reloadTasks();
+        })
+        .catch(err => {
+          this.handleError(err);
+        })
+    });
   }
 
   onCancel = () => {
@@ -317,22 +488,9 @@ class Diagram extends React.Component {
     });
   }
 
-  removeTask = task => {
-    if (task._id) {
-      axios.post(api.removeTask, {
-        id: task._id
-      })
-        .then(() => {
-          console.log('Remove successful');
-          this.removeTaskFromPaper(task);
-        })
-        .catch(err => {
-          console.log('Remove fail');
-        })
-    }
-    else {
-      this.removeTaskFromPaper(task);
-    }
+
+  handleError = err => {
+    console.error(err);
   }
 
   removeTaskFromPaper = task => {
@@ -357,39 +515,43 @@ class Diagram extends React.Component {
     console.log(graph);
     console.log(paper);
 
+    // show cell popover
     paper.on('cell:pointerdown', (cellView, evt, evtX, evtY) => {
-      console.log(cellView);
-      if (cellView && cellView.model) {
+      if (cellView && cellView.model && !cellView.model.isLink()) {
+        this.setState({
+          modalTask: this.tasks[cellView.model.cid]
+        });
         const { x: cellX, y: cellY } = cellView.model.attributes.position;
         const { width, height } = cellView.model.attributes.size;
-        const popoverWidth = 120;
-        const popoverHeight = 50;
-        const centerX = cellX + width / 2;
-        const centerY = cellY + height / 2;
-        const margin = 5;
-        // TODO: consider the popover outside screen
-        const popoverX = cellX;
-        const popoverY = evtY > centerY
-          // evtY > centerY: display below the cell
-          ? cellY + margin + height
-          // else: display above the cell;
-          : cellY - margin - popoverHeight;
-        this.setState({
-          showPopover: true,
-          popoverX,
-          popoverY
-        });
-        this.removeTask = this.removeTask.bind(this, this.tasks[cellView.model.cid]);
+        const { popoverX, popoverY } = this.getPopoverPosition({ cellX, cellY, width, height }, { evtX, evtY });
+        this.showPopover(popoverX, popoverY);
         // FIXME: better way to write?
         function onBlankPointerDown(evt, x, y) {
+          // if the click is outside the popover
+          if (!(x > popoverX
+            && x < popoverX + POPOVER_WIDTH
+            && y > popoverY
+            && y < popoverY + POPOVER_HEIGHT)) {
+            this.setState({
+              modalTask: {}
+            });
+          }
           this.closePopover();
           paper.off('blank:pointerdown', onBlankPointerDown);
         }
         onBlankPointerDown = onBlankPointerDown.bind(this);
         paper.on('blank:pointerdown', onBlankPointerDown);
+
+        function onCellPointerMove() {
+          this.closePopover();
+          paper.off('cell:pointermove', onCellPointerMove);
+        }
+        onCellPointerMove = onCellPointerMove.bind(this);
+        paper.on('cell:pointermove', onCellPointerMove);
       }
     });
 
+    // connect by dropping
     paper.on('cell:pointerup', (cellView, evt, x, y) => {
       // Find the first element below that is not a link nor the dragged element itself.
       const elementBelow = graph.get('cells').find(function (cell) {
@@ -410,9 +572,16 @@ class Diagram extends React.Component {
       return false;
     });
 
-    paper.on('link:pointerdown', (cellView, evt, x, y) => {
+    // add remove button to link 
+    paper.on('link:pointerdown', (linkView, evt, x, y) => {
       evt.stopPropagation();
-      console.log('link down');
+      console.log(linkView);
+      this.addToolsToLink(linkView);
+      const onBlankPointerDown = (evt, x, y) => {
+        linkView.hideTools();
+        paper.off('blank:pointerdown', onBlankPointerDown);
+      };
+      paper.on('blank:pointerdown', onBlankPointerDown);
     });
   }
 
@@ -433,8 +602,15 @@ class Diagram extends React.Component {
     return result;
   }
 
-  // TODO: change this.tasks into array? or other data types
   // TODO: consider a global way of using this.tasks, in case the structure changes
+
+  reloadTasks = () => {
+    if (this.graph) {
+      this.graph.clear();
+      this.tasks = [];
+      this.loadTasks();
+    }
+  }
 
   loadTasks = () => {
     axios.post(api.getByRootTask, { id: this.props.rootTaskId })
@@ -459,37 +635,9 @@ class Diagram extends React.Component {
     this.formRef = formRef;
   }
 
-  createTasks = tasks => {
-    console.log(tasks);
-    if (tasks) {
-      const payload = {
-        tasks: []
-      };
-      // tell if the task is a task or a task collection
-      // TODO: better way to distinguish
-      const taskArr = tasks.title ? [tasks] : tasks;
-      _.forIn(taskArr, task => {
-        task.creator = task.creator || this.props.userId;
-        task.parent = task.parent || this.props.rootTaskId;
-        payload.tasks.push(this.filterData(task));
-      });
-      console.log(payload);
-      return axios.post(api.createTask, payload);
-    }
-  }
-
-  saveFlow = () => {
-    console.log(this.tasks);
-    this.createTasks(this.tasks)
-      .then((res) => {
-        console.log(res.data);
-        console.log('success');
-      })
-      .catch(err => {
-        console.error(err);
-      })
-  }
-
+  /**
+   * remove 'rect' from task
+   */
   filterData = task => {
     const newTask = _.omitBy(task, (val, key) => {
       if (!val) return true;
@@ -500,9 +648,32 @@ class Diagram extends React.Component {
     return newTask;
   }
 
+  getPopoverPosition = ({ cellX, cellY, width, height }, { evtX, evtY }) => {
+    const centerX = cellX + width / 2;
+    const centerY = cellY + height / 2;
+    // TODO: consider the popover outside screen
+    const popoverX = cellX;
+    const popoverY = evtY > centerY
+      // evtY > centerY: display below the cell
+      ? cellY + POPOVER_MARGIN + height
+      // else: display above the cell;
+      : cellY - POPOVER_MARGIN - POPOVER_HEIGHT;
+    return { popoverX, popoverY };
+  }
+
+  showPopover = (popoverX, popoverY) => {
+    this.setState({
+      showPopover: true,
+      popoverX,
+      popoverY
+    });
+  }
+
   closePopover = () => {
     this.setState({
-      showPopover: false
+      showPopover: false,
+      popoverX: 0,
+      popoverY: 0
     });
   }
 
@@ -511,11 +682,12 @@ class Diagram extends React.Component {
       <React.Fragment>
         <AddTaskModal
           id="addTaskModal"
-          isEdit={this.state.modal.isEdit}
-          editId={this.state.modal.editId}
+          isEditModal={this.state.isEditModal}
+          modalTask={this.state.modalTask}
           wrappedComponentRef={this.saveFormRef}
           visible={this.state.visible}
           onCreate={this.onCreate}
+          onUpdate={this.onUpdate}
           onCancel={this.onCancel}
           confirmLoading={this.state.confirmLoading}
         />
@@ -524,6 +696,23 @@ class Diagram extends React.Component {
           width: window.innerWidth
         }}>
           <div id="holder"></div>
+          <Button
+            type="primary"
+            id="addFlow"
+            onClick={this.addTask}
+            style={{
+              left: window.innerWidth - 75,
+            }}>Add</Button>
+          {/* TODO: if changes are made, enable Button */}
+          <Button
+            type="primary"
+            id="saveFlow"
+            disabled={!this.state.canSave}
+            onClick={this.saveFlow}
+            style={{
+              left: window.innerWidth - 145,
+            }}>Save</Button>
+          <Joystick />
         </div>
         {/* FIXME: other way to close popover/position of popover outside screen */}
         <div className="cell-popover"
@@ -531,30 +720,16 @@ class Diagram extends React.Component {
             display: this.state.showPopover ? 'block' : 'none',
             left: this.state.popoverX,
             top: this.state.popoverY,
+            width: POPOVER_WIDTH,
+            height: POPOVER_HEIGHT
           }}
         >
           <div className="action">
             <Icon type="delete" onClick={this.showRemoveModal} />
-            <Icon type="edit" />
+            <Icon type="edit" onClick={this.editTask} />
           </div>
           <Icon type="close" onClick={this.closePopover} />
         </div>
-        <Button
-          type="primary"
-          id="addFlow"
-          onClick={this.showModal}
-          style={{
-            left: window.innerWidth - 75
-          }}>Add</Button>
-        {/* TODO: if changes are made, enable Button */}
-        <Button
-          type="primary"
-          id="saveFlow"
-          onClick={this.saveFlow}
-          style={{
-            left: window.innerWidth - 145
-          }}>Save</Button>
-        <Joystick />
       </React.Fragment>
     )
   }
@@ -625,7 +800,8 @@ class DiagramHolder extends React.Component {
       .then(res => {
         this.setState({
           rootTasks: res.data,
-          loading: false
+          loading: false,
+          selectedTaskId: res.data[0]._id
         });
       })
       .catch(err => {
@@ -683,7 +859,7 @@ class DiagramHolder extends React.Component {
         content = (
           <React.Fragment>
             <div className="root-task-select" style={{ width: window.innerWidth }}>
-              <Select placeholder="Select task" style={{ width: 120 }} onChange={this.onChange}>
+              <Select placeholder="Select task" defaultValue={this.state.selectedTaskId} style={{ width: 120 }} onChange={this.onChange}>
                 {taskOptions}
               </Select>
               <Icon type="plus" onClick={this.showModal} />

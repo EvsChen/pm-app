@@ -6,7 +6,6 @@ const app = express();
 const PORT = 3001;
 
 // TODO: consider using create-react-app proxy
-// TODO: separate backend and front end
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // to support URL-encoded bodies
@@ -20,3 +19,4 @@ const baseApi = (str) => {
 };
 app.use(baseApi('users'), require('./api/v1/users'));
 app.use(baseApi('tasks'), require('./api/v1/tasks'));
+app.use(baseApi('persons'), require('./api/v1/persons'));
