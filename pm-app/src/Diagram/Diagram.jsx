@@ -5,16 +5,17 @@ import moment from 'moment';
 import axios from 'axios';
 
 import api from '../api';
-import { CurrentUserContext } from '../context';
 import './Diagram.css';
 import './Joystick.css';
+import { CurrentUserContext } from '../context';
+import DetailModal from './DetailModal';
 
 const FormItem = Form.Item;
 const confirm = Modal.confirm;
 const Option = Select.Option;
 const joint = window.joint;
 
-const POPOVER_WIDTH = 120;
+const POPOVER_WIDTH = 140;
 const POPOVER_HEIGHT = 50;
 const POPOVER_MARGIN = 5;
 
@@ -88,9 +89,6 @@ class Joystick extends React.Component {
 
 // FIXME: consider changing date into 12:00 AM
 class AddTask extends React.Component {
-  constructor(props) {
-    super(props);
-  }
 
   onChange = (dates, dateStrings) => {
     console.log('From: ', dates[0], ', to: ', dates[1]);
@@ -191,7 +189,7 @@ class Diagram extends React.Component {
       canSave: false,
       loading: true,
       visible: false,
-      removeModalVisible: false,
+      detailModalVisible: false,
       confirmLoading: false,
       showPopover: false,
       popoverX: 0,
@@ -214,6 +212,13 @@ class Diagram extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.rootTaskId !== prevProps.rootTaskId) {
+      // close popover
+      this.closePopover();
+      // close all modal
+      this.setState({
+        visible: false,
+        detailModalVisible: false
+      })
       this.tasks = {};
       this.graph.clear();
       this.loadTasks();
@@ -333,6 +338,13 @@ class Diagram extends React.Component {
     });
   }
 
+  showDetailModal = () => {
+    this.closePopover();
+    this.setState({
+      detailModalVisible: true
+    });
+  }
+
   buildRect = taskParams => {
     if (_.isArray(taskParams)) {
       taskParams.forEach(task => {
@@ -408,7 +420,7 @@ class Diagram extends React.Component {
       const tasks = this.tasks;
       const setState = this.setState.bind(this);
       const removeTool = new joint.linkTools.Remove({
-        action: function(evt) {
+        action: function (evt) {
           this.model.remove();
           const sourceTask = tasks[this.sourceView.model.cid];
           const targetTask = tasks[this.targetView.model.cid];
@@ -456,7 +468,6 @@ class Diagram extends React.Component {
     });
   }
 
-  // TODO: how to remove the links from the paper?
   /**
    * update the task when the modal closes
    */
@@ -526,7 +537,7 @@ class Diagram extends React.Component {
         const { popoverX, popoverY } = this.getPopoverPosition({ cellX, cellY, width, height }, { evtX, evtY });
         this.showPopover(popoverX, popoverY);
         // FIXME: better way to write?
-        function onBlankPointerDown(evt, x, y) {
+        const onBlankPointerDown = (function (evt, x, y) {
           // if the click is outside the popover
           if (!(x > popoverX
             && x < popoverX + POPOVER_WIDTH
@@ -538,15 +549,13 @@ class Diagram extends React.Component {
           }
           this.closePopover();
           paper.off('blank:pointerdown', onBlankPointerDown);
-        }
-        onBlankPointerDown = onBlankPointerDown.bind(this);
-        paper.on('blank:pointerdown', onBlankPointerDown);
+        }).bind(this);
 
-        function onCellPointerMove() {
+        const onCellPointerMove = (function () {
           this.closePopover();
           paper.off('cell:pointermove', onCellPointerMove);
-        }
-        onCellPointerMove = onCellPointerMove.bind(this);
+        }).bind(this);
+        paper.on('blank:pointerdown', onBlankPointerDown);
         paper.on('cell:pointermove', onCellPointerMove);
       }
     });
@@ -677,6 +686,14 @@ class Diagram extends React.Component {
     });
   }
 
+  viewSubTaskHandler = () => {
+    // close the detail modal
+    this.setState({
+      detailModalVisible: false
+    });
+    this.props.onViewSubTask(this.state.modalTask);
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -691,6 +708,10 @@ class Diagram extends React.Component {
           onCancel={this.onCancel}
           confirmLoading={this.state.confirmLoading}
         />
+        <DetailModal
+          visible={this.state.detailModalVisible}
+          onViewSubTask={this.viewSubTaskHandler}
+        />
         <div className="diagram-container" style={{
           height: window.innerHeight,
           width: window.innerWidth
@@ -703,7 +724,6 @@ class Diagram extends React.Component {
             style={{
               left: window.innerWidth - 75,
             }}>Add</Button>
-          {/* TODO: if changes are made, enable Button */}
           <Button
             type="primary"
             id="saveFlow"
@@ -714,7 +734,6 @@ class Diagram extends React.Component {
             }}>Save</Button>
           <Joystick />
         </div>
-        {/* FIXME: other way to close popover/position of popover outside screen */}
         <div className="cell-popover"
           style={{
             display: this.state.showPopover ? 'block' : 'none',
@@ -725,6 +744,7 @@ class Diagram extends React.Component {
           }}
         >
           <div className="action">
+            <Icon type="profile" onClick={this.showDetailModal} />
             <Icon type="delete" onClick={this.showRemoveModal} />
             <Icon type="edit" onClick={this.editTask} />
           </div>
@@ -741,7 +761,10 @@ class DiagramHolder extends React.Component {
     rootTasks: [],
     selectedTaskId: '',
     visible: false,
-    confirmLoading: false
+    confirmLoading: false,
+    showSubTask: false,
+    selectedSubTask: {},
+    taskTree:[]
   }
 
   componentDidMount() {
@@ -831,6 +854,35 @@ class DiagramHolder extends React.Component {
     return newTask;
   }
 
+  showSubTask = selectedSubTask => {
+    this.setState(prevState => {
+      const taskTree = prevState.taskTree;
+      taskTree.push({
+        _id: prevState.selectedTaskId,
+        task: prevState.selectedSubTask
+      });
+      return {
+        selectedSubTask,
+        selectedTaskId: selectedSubTask._id,
+        showSubTask: true,
+        taskTree
+      }
+    });
+  }
+
+  returnToUpperTask = () => {
+    this.setState(prevState => {
+      const taskTree = prevState.taskTree;
+      const upperTask = taskTree.pop();
+      return {
+        selectedSubTask: upperTask.task,
+        selectedTaskId: upperTask._id,
+        showSubTask: !(taskTree.length === 0),
+        taskTree
+      }
+    });
+  }
+
   render() {
     let content;
     if (this.state.loading) {
@@ -859,12 +911,32 @@ class DiagramHolder extends React.Component {
         content = (
           <React.Fragment>
             <div className="root-task-select" style={{ width: window.innerWidth }}>
-              <Select placeholder="Select task" defaultValue={this.state.selectedTaskId} style={{ width: 120 }} onChange={this.onChange}>
-                {taskOptions}
-              </Select>
-              <Icon type="plus" onClick={this.showModal} />
+              {
+                this.state.showSubTask
+                  ? (
+                    <React.Fragment>
+                      <Icon type="left" onClick={this.returnToUpperTask}
+                      style={{
+                        float: 'left'
+                      }}/>
+                      <span>{this.state.selectedSubTask.title}</span>
+                    </React.Fragment>
+                  )
+                  : (
+                    <React.Fragment>
+                      <Select placeholder="Select task" defaultValue={this.state.selectedTaskId} style={{ width: 120 }} onChange={this.onChange}>
+                        {taskOptions}
+                      </Select>
+                      <Icon type="plus" onClick={this.showModal} />
+                    </React.Fragment>
+                  )
+              }
             </div>
-            <Diagram rootTaskId={this.state.selectedTaskId} userId={this.props.userId} />
+            <Diagram
+              rootTaskId={this.state.selectedTaskId}
+              userId={this.props.userId}
+              onViewSubTask={this.showSubTask}
+            />
           </React.Fragment>
         );
       }

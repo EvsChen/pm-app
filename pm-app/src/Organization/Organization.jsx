@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tree, Icon, Cascader, Input, Button, Avatar, Layout, Select, message } from 'antd';
 import axios from 'axios';
+import {polyfill} from "mobile-drag-drop";
 import _ from 'lodash';
 
 import { CurrentUserContext } from '../context';
@@ -51,6 +52,14 @@ class Organization extends React.Component {
 
   componentDidMount() {
     this.loadRootTasks();
+    polyfill({
+      forceApply: true,
+      iterationInterval: 50,
+    });
+    // window.addEventListener('touchmove',function(){});
+    // window.addEventListener('dragenter',function(evt){
+    //   evt.preventDefault();
+    // });
   }
 
   componentWillUnmount() {
@@ -240,6 +249,56 @@ class Organization extends React.Component {
     this.formRef = formRef;
   }
 
+  onDragEnter = info => {
+    console.log(info);
+  }
+
+  onDrop = (info) => {
+    console.log(info);
+    const dropKey = info.node.props.eventKey;
+    const dragKey = info.dragNode.props.eventKey;
+    const dropPos = info.node.props.pos.split('-');
+    const dropPosition = info.dropPosition - Number(dropPos[dropPos.length - 1]);
+    const loop = (data, key, callback) => {
+      data.forEach((item, index, arr) => {
+        if (item.key === key) {
+          return callback(item, index, arr);
+        }
+        if (item.children) {
+          return loop(item.children, key, callback);
+        }
+      });
+    };
+    const data = [...this.state.treeData];
+    let dragObj;
+    loop(data, dragKey, (item, index, arr) => {
+      arr.splice(index, 1);
+      dragObj = item;
+    });
+    if (info.dropToGap) {
+      let ar;
+      let i;
+      loop(data, dropKey, (item, index, arr) => {
+        ar = arr;
+        i = index;
+      });
+      if (dropPosition === -1) {
+        ar.splice(i, 0, dragObj);
+      } else {
+        ar.splice(i + 1, 0, dragObj);
+      }
+    } else {
+      loop(data, dropKey, (item) => {
+        item.children = item.children || [];
+        // where to insert 示例添加到尾部，可以是随意位置
+        item.children.push(dragObj);
+      });
+    }
+    this.setState({
+      treeData: data,
+    });
+  }
+
   render() {
     const { userName } = this.state;
     const suffix = userName ? <Icon type="close-circle" onClick={this.emitEmpty} /> : null;
@@ -274,7 +333,10 @@ class Organization extends React.Component {
           <Tree
             showIcon
             defaultExpandAll
+            draggable
             defaultSelectedKeys={['0-0-0']}
+            onDragEnter={this.onDragEnter}
+            onDrop={this.onDrop}
           >
             {this.renderTreeNodes(this.state.treeData)}
           </Tree>
