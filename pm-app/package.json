@@ -6,6 +6,7 @@
     "antd": "^3.6.2",
     "axios": "^0.18.0",
     "babel-plugin-import": "^1.8.0",
+    "gh-pages": "^1.2.0",
     "lodash": "^4.17.10",
     "mobile-drag-drop": "^2.3.0-rc.1",
     "moment": "^2.22.2",
@@ -16,11 +17,14 @@
     "react-scripts": "1.1.4",
     "styled-jsx": "^2.2.7"
   },
+  "homepage": "https://evschen.github.io/pm-app",
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "proxy": "http://localhost:3001/"
 }
