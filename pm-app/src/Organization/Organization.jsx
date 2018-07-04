@@ -14,7 +14,7 @@ const TreeNode = Tree.TreeNode;
 const Option = Select.Option;
 
 const options = [{
-  value: 'zhejiang',
+  value: 'shanghai',
   label: 'Zhejiang',
   children: [{
     value: 'hangzhou',
@@ -71,12 +71,13 @@ class Organization extends React.Component {
 
   convertTreeToOrganization = treeData => {
     // omit the person property of each object
-    return treeData.map(val => {
-      if (_.isArray(val.children) && val.children.length > 0) {
+    if (_.isArray(treeData) && treeData.length > 0) {
+      return treeData.map(val => {
         val.children = this.convertTreeToOrganization(val.children);
-      }
-      return _.omit(val, 'person');
-    });
+        return _.omit(val, 'person');
+      });
+    }
+    return [];
   }
 
   updateTaskOrganization = organization => {
@@ -101,9 +102,11 @@ class Organization extends React.Component {
         this.setState({
           rootTasks: res.data,
           loading: false,
-          selectedTaskId: res.data[0]._id
+          selectedTaskId: res.data.length > 0 ? res.data[0]._id : ''
         });
-        this.loadTaskDetail(this.state.selectedTaskId);
+        if (this.state.selectedTaskId) {
+          this.loadTaskDetail(this.state.selectedTaskId);          
+        }
       })
       .catch(err => {
         this.setState({

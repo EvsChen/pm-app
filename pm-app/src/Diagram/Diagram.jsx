@@ -1,183 +1,26 @@
 import React from 'react';
-import { Button, Modal, Form, Input, Radio, DatePicker, Select, Icon, Spin } from 'antd';
+import { Button, Modal, Select, Icon, Spin } from 'antd';
 import _ from 'lodash';
-import moment from 'moment';
 import axios from 'axios';
 
 import api from '../api';
 import './Diagram.css';
-import './Joystick.css';
 import { CurrentUserContext } from '../context';
 import DetailModal from './DetailModal';
+import AddTaskModal from './AddTaskModal';
+import Joystick from './Joystick';
+import util from '../util';
 
-const FormItem = Form.Item;
 const confirm = Modal.confirm;
 const Option = Select.Option;
 const joint = window.joint;
+const $ = window.$;
+const saveSvgAsPng = window.saveSvgAsPng;
+const svgAsPngUri = window.svgAsPngUri;
 
 const POPOVER_WIDTH = 140;
 const POPOVER_HEIGHT = 50;
 const POPOVER_MARGIN = 5;
-
-// FIXME: restrict the position of joystick touch in the circle
-// TODO: consider separating Joystick into a file
-class Joystick extends React.Component {
-  state = {
-    x: 0,
-    y: 0,
-    startX: 0,
-    startY: 0,
-    moveX: 0,
-    moveY: 0
-  }
-
-  componentDidMount() {
-    const touchPoint = document.getElementById('joystick-touch');
-    touchPoint.addEventListener('touchstart', this.onTouchStart, { passive: false });
-    touchPoint.addEventListener('touchmove', this.onTouchMove, { passive: false });
-    touchPoint.addEventListener('touchend', this.onTouchEnd, { passive: false });
-  }
-
-  onTouchStart = (evt) => {
-    evt.preventDefault();
-    evt.target.style.backgroundColor = 'rgba(0,0,0,0.8)';
-    this.setState({
-      x: evt.target.offsetLeft,
-      y: evt.target.offsetTop,
-      startX: evt.pageX || evt.touches[0].pageX,
-      startY: evt.pageY || evt.touches[0].pageY,
-    });
-  }
-
-  onTouchMove = (evt) => {
-    evt.preventDefault();
-    const target = evt.target;
-    const holder = document.getElementById('holder');
-    const nowX = evt.pageX || evt.touches[0].pageX;
-    const nowY = evt.pageY || evt.touches[0].pageY;
-    this.setState({
-      moveX: nowX - this.state.startX,
-      moveY: nowY - this.state.startY
-    });
-    target.style.left = `${40 + this.state.moveX}px`;
-    target.style.top = `${40 + this.state.moveY}px`;
-    const step = 5;
-    this.state.moveX > 0
-      ? holder.style.left = `${holder.offsetLeft - step}px`
-      : holder.style.left = `${(holder.offsetLeft + step) > 0 ? 0 : (holder.offsetLeft + step)}px`;
-  }
-
-  onTouchEnd = (evt) => {
-    evt.preventDefault();
-    const target = evt.target;
-    target.style.backgroundColor = 'rgba(0,0,0,0.4)';
-    this.setState({
-      moveX: 0,
-      moveY: 0,
-    });
-    target.style.left = target.style.top = '40px';
-  }
-
-  render() {
-    return (
-      <div id="joystick">
-        <div id="joystick-touch"></div>
-      </div>
-    );
-  }
-}
-
-// FIXME: consider changing date into 12:00 AM
-class AddTask extends React.Component {
-
-  onChange = (dates, dateStrings) => {
-    console.log('From: ', dates[0], ', to: ', dates[1]);
-    console.log('From: ', dateStrings[0], ', to: ', dateStrings[1]);
-  }
-
-  render() {
-    // Here we lift the visible state up, as well as the onCreate method
-    const { form, confirmLoading, visible, onCreate, onUpdate, onCancel, isEditModal } = this.props;
-    const { getFieldDecorator } = form;
-    return (
-      <Modal title={isEditModal ? 'Update task' : 'Create new task'}
-        visible={visible}
-        onOk={isEditModal ? onUpdate : onCreate}
-        okText={isEditModal ? 'Update' : 'Create'}
-        onCancel={onCancel}
-        confirmLoading={confirmLoading}
-        bodyStyle={{
-          height: 400,
-          overflowY: 'auto'
-        }}
-        style={{ top: 50 }}
-      >
-        <Form layout="vertical">
-          <FormItem label="Title">
-            {getFieldDecorator('title', {
-              rules: [{ required: true, message: 'Please input the title of task!' }]
-            })(
-              <Input />
-            )}
-          </FormItem>
-          <FormItem label="Description">
-            {getFieldDecorator('description')(<Input type="textarea" />)}
-          </FormItem>
-          <FormItem label="Owner">
-            {getFieldDecorator('owner')(
-              <Select>
-                <Option value="jack">Jack</Option>
-                <Option value="lucy">Lucy</Option>
-              </Select>
-            )}
-          </FormItem>
-          <FormItem label="Start Date">
-            {getFieldDecorator('startDate')(
-              <DatePicker />
-            )}
-          </FormItem>
-          <FormItem label="End Date">
-            {getFieldDecorator('endDate')(
-              <DatePicker />
-            )}
-          </FormItem>
-          <FormItem className="collection-create-form_last-form-item">
-            {getFieldDecorator('modifier', {
-              initialValue: 'public',
-            })(
-              <Radio.Group>
-                <Radio value="public">Public</Radio>
-                <Radio value="private">Private</Radio>
-              </Radio.Group>
-            )}
-          </FormItem>
-        </Form>
-      </Modal>
-    );
-  }
-}
-
-/**
- * @param {Boolean} isEditModal 
- * @param {Function} onUpdate
- */
-const AddTaskModal = Form.create({
-  // This method maps modal props into form initial values
-  mapPropsToFields: (props) => {
-    const fieldObj = _.mapValues(props.modalTask, (val, key) => {
-      if (key === 'startDate' || key === 'endDate') {
-        return Form.createFormField({
-          value: moment(val)
-        })
-      }
-      return Form.createFormField({
-        value: val
-      })
-    });
-    console.log(fieldObj);
-    return fieldObj;
-  }
-})(AddTask);
 
 // TODO: consider the two-finger zooming: how to handle?
 class Diagram extends React.Component {
@@ -190,6 +33,7 @@ class Diagram extends React.Component {
       loading: true,
       visible: false,
       detailModalVisible: false,
+      saveImgModalVisible: false,
       confirmLoading: false,
       showPopover: false,
       popoverX: 0,
@@ -306,13 +150,15 @@ class Diagram extends React.Component {
   saveFlow = () => {
     console.log(this.tasks);
     this.createTasks(this.tasks)
-      .then((res) => {
-        console.log(res.data);
-        console.log('success');
+      .then(() => {
+        util.handleSuccess('保存成功');
+        this.setState({
+          canSave: false
+        });
       })
       .catch(err => {
-        console.error(err);
-      })
+        util.handleError(err);
+      });
   }
 
   showModal = () => {
@@ -381,7 +227,6 @@ class Diagram extends React.Component {
           task.positionY = pos.y;
         }
       });
-      console.log(this.tasks);
       return rect;
     }
   }
@@ -694,9 +539,43 @@ class Diagram extends React.Component {
     this.props.onViewSubTask(this.state.modalTask);
   }
 
+  onDetailModalCancel = () => {
+    this.setState({
+      detailModalVisible: false
+    });
+  }
+
+  exportToImg = () => {
+    svgAsPngUri(document.querySelector('#holder svg'), {}, uri => {
+      this.setState({
+        saveImgModalVisible: true,
+        svgUri: uri
+      });
+    });
+    // saveSvgAsPng(document.querySelector('#holder svg'), 'flowchart.png');
+    // const svgData = $('#holder svg')[0].outerHTML;
+    // const svgBlob = new Blob([svgData], { type: "image/png;charset=utf-8" });
+    // const svgUrl = URL.createObjectURL(svgBlob);
+    // const downloadLink = document.createElement('a');
+    // downloadLink.target = '_blank';
+    // downloadLink.href = svgUrl;
+    // downloadLink.download = 'flowchart.png';
+    // document.body.appendChild(downloadLink);
+    // downloadLink.click();
+    // document.body.removeChild(downloadLink);
+  }
+
   render() {
     return (
       <React.Fragment>
+        <Modal
+          visible={this.state.saveImgModalVisible}
+          footer={null}
+          onCancel={() => { this.setState({saveImgModalVisible: false}) }}
+        >
+          Long press to save the image
+          <img width="300" src={this.state.svgUri} />
+        </Modal>
         <AddTaskModal
           id="addTaskModal"
           isEditModal={this.state.isEditModal}
@@ -709,6 +588,7 @@ class Diagram extends React.Component {
           confirmLoading={this.state.confirmLoading}
         />
         <DetailModal
+          onCancel={this.onDetailModalCancel}
           visible={this.state.detailModalVisible}
           onViewSubTask={this.viewSubTaskHandler}
         />
@@ -719,20 +599,29 @@ class Diagram extends React.Component {
           <div id="holder"></div>
           <Button
             type="primary"
-            id="addFlow"
-            onClick={this.addTask}
+            className="action-button"
+            onClick={this.exportToImg}
             style={{
-              left: window.innerWidth - 75,
-            }}>Add</Button>
+              left: window.innerWidth - 225,
+            }}>Export</Button>
           <Button
             type="primary"
             id="saveFlow"
+            className="action-button"
             disabled={!this.state.canSave}
             onClick={this.saveFlow}
             style={{
               left: window.innerWidth - 145,
             }}>Save</Button>
-          <Joystick />
+          <Button
+            type="primary"
+            id="addFlow"
+            className="action-button"
+            onClick={this.addTask}
+            style={{
+              left: window.innerWidth - 75,
+            }}>Add</Button>
+          <Joystick targetId="holder" />
         </div>
         <div className="cell-popover"
           style={{
@@ -764,7 +653,7 @@ class DiagramHolder extends React.Component {
     confirmLoading: false,
     showSubTask: false,
     selectedSubTask: {},
-    taskTree:[]
+    taskTree: []
   }
 
   componentDidMount() {
@@ -916,9 +805,9 @@ class DiagramHolder extends React.Component {
                   ? (
                     <React.Fragment>
                       <Icon type="left" onClick={this.returnToUpperTask}
-                      style={{
-                        float: 'left'
-                      }}/>
+                        style={{
+                          float: 'left'
+                        }} />
                       <span>{this.state.selectedSubTask.title}</span>
                     </React.Fragment>
                   )

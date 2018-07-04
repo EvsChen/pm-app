@@ -6,11 +6,25 @@ const TaskService = require('../../services/tasks');
 router.post('/create', create);
 router.post('/update', update);
 router.post('/get', get);
-router.post('/getRoot', getRoot);
+router.post('/getRoot', getRootByUserId);
+router.post('/getRelatedPerson', getRelatedPerson);
 router.post('/getByRoot', getByRoot);
 router.post('/remove', remove);
 router.post('/query', query);
 module.exports = router;
+
+function getRelatedPerson(req, res) {
+  if (req.body) {
+    TaskService.getRelatedPerson(req.body._id)
+      .then(relatedPersons => {
+        res.status(200).send(relatedPersons);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(400).send(err);
+      })
+  }
+}
 
 function query(req, res) {
   if (req.body) {
@@ -127,9 +141,10 @@ function get(req, res) {
   }
 }
 
-function getRoot(req, res) {
+function getRootByUserId(req, res) {
+  console.log('Received get root by user id');
   if (req.body) {
-    TaskService.getRoot(req.body.id)
+    TaskService.getRootByUserId(req.body.id)
       .then(taskArr => {
         res.status(200).send(taskArr)
       })

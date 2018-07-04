@@ -1,7 +1,9 @@
 .ant-layout .ant-layout {
     position: relative;
     overflow: hidden;
+    touch-action: none;
 }
+
 
 .ant-layout-content {
   position: relative;

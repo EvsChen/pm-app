@@ -5,18 +5,18 @@
   position: absolute;
 }
 
+.action-button {
+  position: absolute;
+  bottom: 20px;
+  height: 30px;
+}
+
 #addFlow {
-    position: absolute;
-    bottom: 20px;
-    width: 60px;
-    height: 30px;
+  width: 60px;
 }
 
 #saveFlow {
-  position: absolute;
   bottom: 20px;
-  width: 60px;
-  height: 30px;
 }
 
 .root-task-select {

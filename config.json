@@ -1,5 +1,6 @@
 {
     "connectionString": "mongodb://localhost:27017/pm-app",
+    "cloudConnectionString": "mongodb+srv://chensy1996:86993136@pm-app-eqo74.mongodb.net/pm-app?retryWrites=true",
     "localUrl": "http://localhost:3001/api",
     "secret": "THIS IS A GREAT APP"
 }

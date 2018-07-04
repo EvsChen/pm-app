@@ -9,6 +9,7 @@ import Index from './Home/Home';
 import Organization from './Organization/Organization';
 import Diagram from './Diagram/Diagram';
 import Setting from './Setting/Setting';
+import ActionList from './ActionList/ActionList';
 
 const { Sider } = Layout;
 
@@ -78,7 +79,7 @@ class Home extends React.Component {
             <Menu.Item key="5">
               <Link to={`${this.props.match.path}/action`}>
                 <Icon type="table" />
-                <span>Action Chart</span>
+                <span>Action List</span>
               </Link>
             </Menu.Item>
             <Menu.Item key="6">
@@ -94,6 +95,7 @@ class Home extends React.Component {
           <Route path={`${this.props.match.path}/diagram`} component={Diagram} />
           <Route path={`${this.props.match.path}/organization`} component={Organization} />
           <Route path={`${this.props.match.path}/setting`} component={Setting} />
+          <Route path={`${this.props.match.path}/action/:taskId`} component={ActionList} />
         </Layout>
       </Layout>
     );

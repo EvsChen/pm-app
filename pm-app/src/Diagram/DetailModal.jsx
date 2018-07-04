@@ -1,5 +1,6 @@
 import React from 'react';
-import { Button, Modal, Form, Input, Radio, DatePicker, Select, Icon, Spin } from 'antd';
+import { Button, Modal } from 'antd';
+import { Link } from 'react-router-dom';
 
 /**
  * @param {Function} onViewSubTask
@@ -8,7 +9,7 @@ class DetailModal extends React.Component {
 
   render() {
     // Here we lift the visible state up, as well as the onCreate method
-    const { onViewSubTask, visible, onCreate, onUpdate, onCancel, isEditModal } = this.props;
+    const { onViewSubTask, visible, onCancel } = this.props;
     return (
       <Modal title="View task detail"
         visible={visible}
@@ -17,9 +18,16 @@ class DetailModal extends React.Component {
           overflowY: 'auto'
         }
         }
+        footer={null}
+        onCancel={onCancel}
         style={{ top: 50 }}
       >
         <Button type="primary" onClick={onViewSubTask}>Show subtasks</Button>
+        <Link to={{
+          pathname: '/home/action/aaa',
+        }}>
+          View action list
+        </Link>
       </Modal>
     );
   }

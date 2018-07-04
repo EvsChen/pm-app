@@ -10,13 +10,12 @@ else{
     connectionString = config.connectionString;
 }
 
-var connectionOptions = {
-    // useMongoClient: true
-}
-mongoose.connect(connectionString,connectionOptions, (err) => {
-    console.error('connection error:');
-    console.error(err);
-});
+mongoose.connect(connectionString,connectionOptions = {})
+  .then(() => { console.log(`Successfully connected to ${connectionString}`); })
+  .catch(err => { 
+    console.log(`Connection to ${connectionString} has failed`);
+    console.log(err);
+  });
 
 mongoose.Promise = global.Promise;
 module.exports = mongoose;

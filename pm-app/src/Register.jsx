@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Icon, Input, Button } from 'antd';
+import { handleSuccess } from './util';
 
 import api from './api';
 const FormItem = Form.Item;
@@ -18,6 +19,7 @@ class NormalLoginForm extends React.Component {
         })
             .then((res) => {
                 if (res.status === 200) {
+                    handleSuccess('创建成功');
                     this.props.history.push("/home");
                 }
             })

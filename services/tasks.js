@@ -2,7 +2,6 @@ const Q = require('q');
 const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 
-const config = require('../config.json');
 const mongoose = require('./mongo-connection');// pack mongoose connection into one module
 const Schema = mongoose.Schema;
 const taskSchema = new Schema({
@@ -27,6 +26,7 @@ const taskSchema = new Schema({
     type: Boolean,
     default: false
   },
+  // tree structure of person id and children
   organization: Schema.Types.Mixed
 });
 const Task = mongoose.model('Task', taskSchema);
@@ -38,10 +38,68 @@ module.exports = {
   remove,
   getByCreator,
   getByRoot,
-  getRoot
+  getRootByUserId,
+  getRelatedPerson,
 };
 
+/**
+ * this recursive function retrieves the root task for a given task _id
+ * @param {string} _id 
+ */
+function getRootTaskByTaskId(_id) {
+  const deferred = Q.defer();
+  Task.findById(_id, (err, res) => {
+    if (err) deferred.reject(err);
+    if (res) {
+      console.log(res);
+      if (res.isRoot) {
+        deferred.resolve(res);
+      }
+      else {
+        deferred.resolve(
+          getRootTaskByTaskId(res.parent._id)
+        );
+      }
+    } 
+  })
+  return deferred.promise;
+}
 
+/**
+ * this function returns title and _id of all the persons related in the task tree
+ * @param {string} _id  - task._id
+ * @returns {Array} relatedPersons
+ */
+function getRelatedPerson(_id) {
+  const deferred = Q.defer();
+  getRootTaskByTaskId(_id)
+    .then(rootTask => {
+      deferred.resolve(flattenOrganization(rootTask.organization));
+    })
+    .catch(err => {
+      deferred.reject(err);
+    })
+  return deferred.promise;
+}
+
+/**
+ * this function flatten the organization tree into a shallow array
+ * @param {Array} organization
+ * @returns {[]} flattenedOrganization 
+ */
+function flattenOrganization(organization) {
+  if (_.isArray(organization) && organization.length > 0) {
+  let flattenedArray = [];
+    organization.forEach(person => {
+      flattenedArray.push(_.omit(person, 'children'));
+      flattenedArray = [...flattenedArray, ...flattenOrganization(person.children)];
+    });
+    return flattenedArray;
+  }
+  else {
+    return [];
+  }
+}
 /**
  * 
  * @param {Object} queryObj object of the query params 
@@ -105,7 +163,7 @@ function getByCreator(id) {
   return deferred.promise;
 }
 
-function getRoot(id) {
+function getRootByUserId(id) {
   const deferred = Q.defer();
   Task.find({
     creator: id,

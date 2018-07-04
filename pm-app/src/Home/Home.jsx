@@ -6,9 +6,9 @@ import moment from 'moment';
 import './Home.css';
 import { CurrentUserContext } from '../context';
 import api from '../api';
+import TaskCard from '../common/TaskCard';
 
 const { Header, Content } = Layout;
-const { Meta } = Card;
 const Option = Select.Option;
 
 class Index extends React.Component {
@@ -68,21 +68,6 @@ class Index extends React.Component {
   }
 }
 
-class TaskCard extends React.Component {
-  render() {
-    return (
-      <Card
-        actions={[<Icon type="setting" />, <Icon type="edit" />, <Icon type="ellipsis" />]}
-      >
-        <Meta
-          avatar={<Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />}
-          title={this.props.task.title}
-          description={(<p>Due: {this.props.task.endDate}</p>)}
-        />
-      </Card>
-    )
-  }
-}
 
 export default props => (
   <CurrentUserContext.Consumer>
