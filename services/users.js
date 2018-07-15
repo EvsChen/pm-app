@@ -59,13 +59,25 @@ function create(userParam) {
 function authenticate(username, password) {
     const deferred = Q.defer();
     User.findOne({ username: username }, function (err, user) {
-        if (err) deferred.reject(err.name + ': ' + err.message);
-        if (user && bcrypt.compareSync(password, user.hash)) {
-            // authentication successful
-            deferred.resolve({ id: user._id, role: user.role, firstName: user.firstName });
-        } else {
+        if (err) deferred.reject(err);
+        if (user) {
+            if (bcrypt.compareSync(password, user.hash)) {
+              // authentication successful
+              deferred.resolve({ id: user._id, role: user.role, firstName: user.firstName });
+            }
+            else {
+              deferred.reject({
+                error: true,
+                message: 'Wrong password!'
+              });
+            }
+        } 
+        else {
             // authentication failed
-            deferred.reject();
+            deferred.reject({
+              error: true,
+              message: 'No such user!'
+            });
         }
     });
     return deferred.promise;

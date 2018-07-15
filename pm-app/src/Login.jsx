@@ -4,6 +4,7 @@ import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import { Link } from 'react-router-dom';
 
 import api from './api';
+import util from './util';
 import './Login.css';
 const FormItem = Form.Item;
 
@@ -14,15 +15,20 @@ class NormalLoginForm extends React.Component {
     this.props.form.validateFields((err, values) => {
       if (!err) {
         axios.post(api.authenticateUser, values)
-          .then((res) => {
-              console.log(res);
-              this.props.logIn(res.data.id);
+          .then(res => {
               if (res.status === 200) {
+                if (res.data.error) {
+                  util.handleError(res.data);                  
+                }
+                else {
                   this.props.history.push("/home");
+                  this.props.logIn(res.data.id);
+                }
               }
           })
-          .catch((err) => {
-            console.error(err);
+          .catch(err => {
+            console.log(err);
+            util.handleError(err);
           })
       }
     });
