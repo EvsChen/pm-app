@@ -1,6 +1,9 @@
 // TODO: changing the baseApi if the app is deployed on the cloud
 const buildApi = (str) => {
-    const baseApi = `http://${window.location.hostname}:3001/api/v1`;
+    if (window.location.hostname !== 'localhost') {
+      const baseApi = `http://pm-app-env.uwa3mts8vm.us-east-1.elasticbeanstalk.com/api/v1`;
+    }
+    const baseApi = `http://localhost:3001/api/v1`;
     return `${baseApi}${str}`;
 };
 
