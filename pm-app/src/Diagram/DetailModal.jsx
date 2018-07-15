@@ -16,8 +16,7 @@ class DetailModal extends React.Component {
         bodyStyle={{
           height: 400,
           overflowY: 'auto'
-        }
-        }
+        }}
         footer={null}
         onCancel={onCancel}
         style={{ top: 50 }}

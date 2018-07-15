@@ -3,7 +3,6 @@ import { Modal, Form, Input, Select, DatePicker } from 'antd';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
-import PropTypes from 'proptypes';
 
 import api from '../api';
 import util from '../util';
@@ -11,27 +10,27 @@ import util from '../util';
 const FormItem = Form.Item;
 const Option = Select.Option;
 // FIXME: consider changing date into 12:00 AM
-class AddTask extends React.Component {
+class AddAction extends React.Component {
   state = {
     personArray: []
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.visible !== prevProps.visible && this.props.visible) {
-      axios.post(api.getRelatedPerson, {
-        _id: this.props.modalTask._id
-      })
-        .then(res => {
-          const personArray = res.data;
-          this.setState({
-            personArray
-          });
-        })
-        .catch(err => {
-          util.handleError(err);
-        })
-    }
-  }
+  // componentDidUpdate(prevProps) {
+  //   if (this.props.visible !== prevProps.visible && this.props.visible) {
+  //     axios.post(api.getRelatedPerson, {
+  //       _id: this.props.modalTask._id
+  //     })
+  //       .then(res => {
+  //         const personArray = res.data;
+  //         this.setState({
+  //           personArray
+  //         });
+  //       })
+  //       .catch(err => {
+  //         util.handleError(err);
+  //       })
+  //   }
+  // }
 
   render() {
     // Here we lift the visible state up, as well as the onCreate method
@@ -88,7 +87,16 @@ class AddTask extends React.Component {
   }
 }
 
-const AddTaskModal = Form.create({
+/**
+ * @param {Function} onCreate
+ * @param {Function} onUpdate
+ * @param {Function} onCancel
+ * @param {Function} wrappedComponentRef - formRef => {this.formRef = formRef}
+ * @param {Boolean} isEditModal 
+ * @param {Boolean} confirmLoading
+ * @param {Boolean} visible
+ */
+const AddActionModal = Form.create({
   // This method maps modal props into form initial values
   mapPropsToFields: (props) => {
     const fieldObj = _.mapValues(props.modalTask, (val, key) => {
@@ -103,11 +111,6 @@ const AddTaskModal = Form.create({
     });
     return fieldObj;
   }
-})(AddTask);
+})(AddAction);
 
-AddTaskModal.propTypes = {
-  isEditModal: PropTypes.bool,
-  onUpdate: PropTypes.func
-}
-
-export default AddTaskModal;
+export default AddActionModal;

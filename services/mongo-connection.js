@@ -2,9 +2,8 @@ const config = require('../config.json');
 const mongoose = require('mongoose');
 
 let connectionString;
-if (process.env.VCAP_SERVICES) {
-    const vcap_services = JSON.parse(process.env.VCAP_SERVICES);
-    connectionString = vcap_services["MongoDB-Service"][0].credentials.uri;
+if (process.env.PORT || config.testMongo) {
+    connectionString = config.cloudConnectionString;
 }
 else{
     connectionString = config.connectionString;

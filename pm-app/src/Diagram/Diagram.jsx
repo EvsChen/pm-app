@@ -14,8 +14,6 @@ import util from '../util';
 const confirm = Modal.confirm;
 const Option = Select.Option;
 const joint = window.joint;
-const $ = window.$;
-const saveSvgAsPng = window.saveSvgAsPng;
 const svgAsPngUri = window.svgAsPngUri;
 
 const POPOVER_WIDTH = 140;

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/react": "^16.4.6",
     "antd": "^3.6.2",
     "axios": "^0.18.0",
     "babel-plugin-import": "^1.8.0",
@@ -10,6 +11,7 @@
     "lodash": "^4.17.10",
     "mobile-drag-drop": "^2.3.0-rc.1",
     "moment": "^2.22.2",
+    "proptypes": "^1.1.0",
     "react": "^16.4.1",
     "react-app-rewired": "^1.5.2",
     "react-dom": "^16.4.1",
@@ -17,7 +19,7 @@
     "react-scripts": "1.1.4",
     "styled-jsx": "^2.2.7"
   },
-  "homepage": "https://evschen.github.io/pm-app",
+  "homepage": "https://evschen.github.io/public",
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
@@ -26,5 +28,10 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
-  "proxy": "http://localhost:3001/"
+  "proxy": "http://localhost:3001/",
+  "devDependencies": {
+    "awesome-typescript-loader": "^5.2.0",
+    "source-map-loader": "^0.2.3",
+    "typescript": "^2.9.2"
+  }
 }
