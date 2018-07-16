@@ -587,6 +587,7 @@ class Diagram extends React.Component {
         />
         <DetailModal
           onCancel={this.onDetailModalCancel}
+          modalTask={this.state.modalTask}
           visible={this.state.detailModalVisible}
           onViewSubTask={this.viewSubTaskHandler}
         />

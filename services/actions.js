@@ -18,12 +18,17 @@ const actionSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
   },
+  parent: {
+    type: Schema.Types.ObjectId,
+    required: true
+  },
   // it should be an enum object with editable entries
   status: String,
   // should be enum as well
   category: String,
   progress: {
     type: Number,
+    default: 0,
     validate: {
       validator: Number.isInteger,
       message: 'Progress {VALUE} is not an integer value'
@@ -34,7 +39,6 @@ const actionSchema = new Schema({
   startDate: Date,
   endDate: Date,
   // under which task the action lies
-  parent: Schema.Types.ObjectId,
 });
 const Action = mongoose.model('Action', actionSchema);
 

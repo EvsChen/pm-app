@@ -10,31 +10,27 @@ import Register from './Register';
 import './App.css';
 import { CurrentUserContext } from './context';
 
-// TODO: Consider combining the auth into the App
-const auth = {
-  isAuthenticated: false,
-  authenticate() {
-    this.isAuthenticated = true;
-  },
-  signout() {
-    this.isAuthenticated = false;
+const isAuthenticated = () => {
+  if (localStorage.getItem('userId')) {
+    return true;
   }
-};
+  return false;
+}
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
     render={props =>
-      auth.isAuthenticated ? (
+      isAuthenticated() ? (
         <Component {...props} />
       ) : (
-        <Redirect
-          to={{
-            pathname: "/login",
-            state: { from: props.location }
-          }}
-        />
-      )
+          <Redirect
+            to={{
+              pathname: '/login',
+              state: { from: props.location }
+            }}
+          />
+        )
     }
   />
 );
@@ -43,27 +39,27 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      curretUser: {
-        id: 'app'
+      user: {
+        id: localStorage.getItem('userId') || '',
+        logOut: this.logOut
       }
-    }
+    };
   }
 
-  logIn = (id) => {
-    auth.authenticate();
-    this.setState({ 
-      user: { 
+  // TODO: consider store using jwt
+  logIn = id => {
+    this.setState({
+      user: {
         id,
         logOut: this.logOut
       }
     });
+    localStorage.setItem('userId', id);
   }
 
   logOut = () => {
-    auth.signout();
-    this.setState({
-      id: ''
-    });
+    this.setState({ id: '' });
+    localStorage.removeItem('userId');
   }
 
   render() {
@@ -72,10 +68,9 @@ class App extends Component {
         <CurrentUserContext.Provider value={this.state.user}>
           <div className="App">
             <PrivateRoute path="/home" component={Main} />
-            <PrivateRoute exact path="/" component={Main} />            
             <Route
               path="/login"
-              render={(props) => <Login {...props} logIn={this.logIn}/>}
+              render={props => <Login {...props} logIn={this.logIn} />}
             />
             <Route path="/register" component={Register} />
           </div>

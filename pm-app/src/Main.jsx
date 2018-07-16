@@ -4,7 +4,6 @@ import { Link, Route } from 'react-router-dom';
 
 import './Main.css';
 
-// Here imports the components from the home folder
 import Index from './Home/Home';
 import Organization from './Organization/Organization';
 import Diagram from './Diagram/Diagram';
@@ -13,13 +12,29 @@ import ActionList from './ActionList/ActionList';
 
 const { Sider } = Layout;
 
-class Home extends React.Component {
-  state = {
-    collapsed: true,
-    current: '1'
+const pathList = [
+  '/home',
+  '/home/diagram',
+  '/home/organization',
+  '/home/setting',
+  '/home/file',
+  '/home/action'
+];
+
+class Main extends React.Component {
+  constructor(props) {
+    super(props);
+    console.log(pathList.indexOf(this.props.location.pathname));
+    const current = pathList.indexOf(this.props.location.pathname) > 0
+      ? pathList.indexOf(this.props.location.pathname).toString()
+      : '0';
+    this.state = {
+      collapsed: true,
+      current
+    };
   }
 
-  onCollapse = (collapsed) => {
+  onCollapse = collapsed => {
     this.setState({ collapsed: collapsed });
   }
 
@@ -47,42 +62,41 @@ class Home extends React.Component {
               <span className="sider-info-position-pos">Manager</span>
             </div>
           </div>
-          {/* TODO: Consider matching the active key by the path*/}
           <Menu theme="dark"
             mode="inline"
             selectedKeys={[this.state.current]}
             onClick={this.handleMenuClick}>
-            <Menu.Item key="1">
+            <Menu.Item key="0">
               <Link to={`${this.props.match.path}`}>
                 <Icon type="calendar" />
                 <span>Home</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="2">
+            <Menu.Item key="1">
               <Link to={`${this.props.match.path}/diagram`}>
                 <Icon type="appstore-o" />
                 <span>Diagram</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="3">
+            <Menu.Item key="2">
               <Link to={`${this.props.match.path}/organization`}>
                 <Icon type="user" />
                 <span>Organization</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="4">
+            <Menu.Item key="3">
               <Link to={`${this.props.match.path}/file`}>
                 <Icon type="file" />
                 <span>File</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="5">
+            <Menu.Item key="4">
               <Link to={`${this.props.match.path}/action`}>
                 <Icon type="table" />
                 <span>Action List</span>
               </Link>
             </Menu.Item>
-            <Menu.Item key="6">
+            <Menu.Item key="5">
               <Link to={`${this.props.match.path}/setting`}>
                 <Icon type="setting" />
                 <span>Setting</span>
@@ -95,11 +109,11 @@ class Home extends React.Component {
           <Route path={`${this.props.match.path}/diagram`} component={Diagram} />
           <Route path={`${this.props.match.path}/organization`} component={Organization} />
           <Route path={`${this.props.match.path}/setting`} component={Setting} />
-          <Route path={`${this.props.match.path}/action/:taskId`} component={ActionList} />
+          <Route path={`${this.props.match.path}/action`} component={ActionList} />
         </Layout>
       </Layout>
     );
   }
 }
 
-export default Home;
+export default Main;

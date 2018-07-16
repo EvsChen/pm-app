@@ -8,7 +8,6 @@ import util from './util';
 import './Login.css';
 const FormItem = Form.Item;
 
-// TODO: automatic login
 class NormalLoginForm extends React.Component {
   handleSubmit = (e) => {
     e.preventDefault();
@@ -21,8 +20,8 @@ class NormalLoginForm extends React.Component {
                   util.handleError(res.data);                  
                 }
                 else {
-                  this.props.history.push("/home");
                   this.props.logIn(res.data.id);
+                  this.props.history.push("/home");
                 }
               }
           })

@@ -1,5 +1,4 @@
 const Q = require('q');
-const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 
 const mongoose = require('./mongo-connection');// pack mongoose connection into one module

@@ -1,15 +1,12 @@
 import React from 'react';
+import PropTypes from 'proptypes';
 import { Button, Modal } from 'antd';
 import { Link } from 'react-router-dom';
 
-/**
- * @param {Function} onViewSubTask
- */
 class DetailModal extends React.Component {
-
   render() {
     // Here we lift the visible state up, as well as the onCreate method
-    const { onViewSubTask, visible, onCancel } = this.props;
+    const { onViewSubTask, visible, onCancel, modalTask } = this.props;
     return (
       <Modal title="View task detail"
         visible={visible}
@@ -23,13 +20,21 @@ class DetailModal extends React.Component {
       >
         <Button type="primary" onClick={onViewSubTask}>Show subtasks</Button>
         <Link to={{
-          pathname: '/home/action/aaa',
+          pathname: '/home/action',
+          state: {
+            modalTask
+          }
         }}>
-          View action list
+          <Button type="primary">Show actions</Button>
         </Link>
       </Modal>
     );
   }
 }
+
+DetailModal.propTypes = {
+  visible: PropTypes.bool,
+  modalTask: PropTypes.object
+};
 
 export default DetailModal;

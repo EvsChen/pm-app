@@ -63,6 +63,7 @@ function authenticate(username, password) {
         if (user) {
             if (bcrypt.compareSync(password, user.hash)) {
               // authentication successful
+              console.log(user);
               deferred.resolve({ id: user._id, role: user.role, firstName: user.firstName });
             }
             else {

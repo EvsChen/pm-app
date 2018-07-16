@@ -7,3 +7,13 @@
 #addFlow {
   width: 60px;
 }
+
+.ant-list {
+  width: 90%;
+  margin: 0 auto;
+  margin-top: 30px;
+}
+
+.ant-list-item-content-single {
+  justify-content: space-between;
+}

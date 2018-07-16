@@ -115,7 +115,6 @@ function update(req, res) {
         })
     }
     else {
-      // TODO: make login consistent
       if (req.body._id) {
         TaskService.update(req.body)
           .then(updatedTask => {

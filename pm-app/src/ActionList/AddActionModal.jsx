@@ -1,11 +1,8 @@
 import React from 'react';
 import { Modal, Form, Input, Select, DatePicker } from 'antd';
+import PropTypes from 'proptypes';
 import moment from 'moment';
 import _ from 'lodash';
-import axios from 'axios';
-
-import api from '../api';
-import util from '../util';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -37,7 +34,7 @@ class AddAction extends React.Component {
     const { form, confirmLoading, visible, onCreate, onUpdate, onCancel, isEditModal } = this.props;
     const { getFieldDecorator } = form;
     return (
-      <Modal title={isEditModal ? 'Update task' : 'Create new task'}
+      <Modal title={isEditModal ? 'Update action' : 'Create new action'}
         visible={visible}
         onOk={isEditModal ? onUpdate : onCreate}
         okText={isEditModal ? 'Update' : 'Create'}
@@ -53,9 +50,7 @@ class AddAction extends React.Component {
           <FormItem label="Title">
             {getFieldDecorator('title', {
               rules: [{ required: true, message: 'Please input the title of task!' }]
-            })(
-              <Input />
-            )}
+            })(<Input type="textarea"/>)}
           </FormItem>
           <FormItem label="Description">
             {getFieldDecorator('description')(<Input type="textarea" />)}
@@ -87,15 +82,6 @@ class AddAction extends React.Component {
   }
 }
 
-/**
- * @param {Function} onCreate
- * @param {Function} onUpdate
- * @param {Function} onCancel
- * @param {Function} wrappedComponentRef - formRef => {this.formRef = formRef}
- * @param {Boolean} isEditModal 
- * @param {Boolean} confirmLoading
- * @param {Boolean} visible
- */
 const AddActionModal = Form.create({
   // This method maps modal props into form initial values
   mapPropsToFields: (props) => {
@@ -112,5 +98,15 @@ const AddActionModal = Form.create({
     return fieldObj;
   }
 })(AddAction);
+
+AddActionModal.propTypes = {
+  onCreate: PropTypes.func,
+  onUpdate: PropTypes.func,
+  onCancel: PropTypes.func,
+  wrappedComponentRef: PropTypes.func,
+  isEditModal: PropTypes.bool,
+  visible: PropTypes.bool,
+  confirmLoading: PropTypes.bool
+};
 
 export default AddActionModal;
