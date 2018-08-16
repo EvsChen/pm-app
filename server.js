@@ -6,11 +6,11 @@ const session = require('express-session');
 const app = express();
 
 const PORT = process.env.PORT || 3001;
-console.log(`The port is ${PORT}`);
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })); // to support URL-encoded bodies
+// to support URL-encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); 
 // TODO: session management
 app.use(session({
   secret: 'sessiontest', // 与cookieParser中的一致
@@ -25,10 +25,10 @@ app.get('/', (req, res) => {
 
 const baseApiPath = '/api/v1/';
 const baseApi = str => baseApiPath.concat(str);
-app.use(baseApi('users'), require('./api/v1/users'));
-app.use(baseApi('tasks'), require('./api/v1/tasks'));
-app.use(baseApi('persons'), require('./api/v1/persons'));
-app.use(baseApi('actions'), require('./api/v1/actions'));
+app.use(baseApi('users'), require(`.${baseApiPath}users`));
+app.use(baseApi('tasks'), require(`.${baseApiPath}tasks`));
+app.use(baseApi('persons'), require(`.${baseApiPath}persons`));
+app.use(baseApi('actions'), require(`.${baseApiPath}actions`));
 
 app.listen(PORT, () => {
   console.log(`server has been started on localhost:${PORT}`);

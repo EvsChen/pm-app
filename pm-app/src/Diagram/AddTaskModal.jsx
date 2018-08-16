@@ -1,35 +1,79 @@
 import React from 'react';
-import { Modal, Form, Input, Select, DatePicker } from 'antd';
+import { Modal, Form, Input, Select, DatePicker, Button } from 'antd';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
 import PropTypes from 'proptypes';
 
 import api from '../api';
-import util from '../util';
+import util from '../common/util';
+import s3 from '../common/s3';
+import { CurrentUserContext } from '../common/context';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 // FIXME: consider changing date into 12:00 AM
 class AddTask extends React.Component {
   state = {
-    personArray: []
+    personArray: [],
+    files: [],
+    enableFilePreview: false
+  }
+
+  componentDidMount() {
+    s3.$loadFileList(this.props.userId)
+      .then(list => {
+        if (list) {
+          this.setState({
+            files: list
+          });
+        }
+      })
+      .catch(err => {
+        util.handleError(err);
+      })
+  }
+
+  onFileChange = val => {
+    if (val) {
+      this.setState({
+        enableFilePreview: true,
+        filePreviewPath: val
+      });
+    }
+  }
+
+  onModalVisible = () => {
+    this.getRelatedPersonList();
+    this.checkFilePreview();
+  }
+
+  checkFilePreview = () => {
+    // task含有file项, enable preview
+    if (this.props.modalTask && this.props.modalTask.filePath) {
+      this.setState({
+        enableFilePreview: true,
+        filePreviewPath: this.props.modalTask.filePath
+      });
+    }
+  }
+
+  getRelatedPersonList = () => {
+    axios.post(api.getRelatedPerson, {
+      _id: this.props.modalTask._id
+    })
+      .then(res => {
+        const personArray = res.data;
+        this.setState({ personArray });
+      })
+      .catch(err => {
+        util.handleError(err);
+      })
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.visible !== prevProps.visible && this.props.visible) {
-      axios.post(api.getRelatedPerson, {
-        _id: this.props.modalTask._id
-      })
-        .then(res => {
-          const personArray = res.data;
-          this.setState({
-            personArray
-          });
-        })
-        .catch(err => {
-          util.handleError(err);
-        })
+      this.onModalVisible();
     }
   }
 
@@ -72,6 +116,22 @@ class AddTask extends React.Component {
               </Select>
             )}
           </FormItem>
+          <FormItem label="File">
+            {getFieldDecorator('filePath')(
+              <Select onChange={this.onFileChange} className="file-select">
+                {
+                  this.state.files.map(val => 
+                    <Option value={val.url} key={val.ETag}>{val.title}</Option>
+                  )
+                }
+              </Select>
+            )}
+            <Button shape="circle" icon="search" 
+              target="_blank"
+              disabled={!this.state.enableFilePreview}
+              href={this.state.filePreviewPath}
+            />
+          </FormItem>
           <FormItem label="Start Date">
             {getFieldDecorator('startDate')(
               <DatePicker />
@@ -110,4 +170,8 @@ AddTaskModal.propTypes = {
   onUpdate: PropTypes.func
 }
 
-export default AddTaskModal;
+export default props => (
+  <CurrentUserContext.Consumer>
+    { ({id}) => (<AddTaskModal {...props} userId={id}/>)}
+  </CurrentUserContext.Consumer>
+);

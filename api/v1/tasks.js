@@ -1,7 +1,14 @@
 const express = require('express');
 const _ = require('lodash');
-const router = express.Router();
+
 const TaskService = require('../../services/tasks');
+
+const router = express.Router();
+
+// TODO: 扩展router的post方法来简化？
+router.$post = (route, handler) => {
+  router.post(route, handler);
+};
 
 router.post('/create', create);
 router.post('/update', update);
@@ -52,6 +59,7 @@ function remove(req, res) {
   }
 }
 
+// TODO: consider changing to a simpler create function
 function create(req, res) {
   if (req.body) {
     console.log(req.body);

@@ -21,6 +21,7 @@ const taskSchema = new Schema({
   parent: Schema.Types.ObjectId,
   children: [Schema.Types.ObjectId],
   linkTo: [Schema.Types.ObjectId],
+  filePath: String,
   isRoot: {
     type: Boolean,
     default: false

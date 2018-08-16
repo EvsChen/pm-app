@@ -4,7 +4,7 @@ import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import { Link } from 'react-router-dom';
 
 import api from './api';
-import util from './util';
+import util from './common/util';
 import './Login.css';
 const FormItem = Form.Item;
 

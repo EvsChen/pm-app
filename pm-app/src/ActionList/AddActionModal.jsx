@@ -12,23 +12,6 @@ class AddAction extends React.Component {
     personArray: []
   }
 
-  // componentDidUpdate(prevProps) {
-  //   if (this.props.visible !== prevProps.visible && this.props.visible) {
-  //     axios.post(api.getRelatedPerson, {
-  //       _id: this.props.modalTask._id
-  //     })
-  //       .then(res => {
-  //         const personArray = res.data;
-  //         this.setState({
-  //           personArray
-  //         });
-  //       })
-  //       .catch(err => {
-  //         util.handleError(err);
-  //       })
-  //   }
-  // }
-
   render() {
     // Here we lift the visible state up, as well as the onCreate method
     const { form, confirmLoading, visible, onCreate, onUpdate, onCancel, isEditModal } = this.props;
@@ -67,14 +50,10 @@ class AddAction extends React.Component {
             )}
           </FormItem>
           <FormItem label="Start Date">
-            {getFieldDecorator('startDate')(
-              <DatePicker />
-            )}
+            {getFieldDecorator('startDate')(<DatePicker />)}
           </FormItem>
           <FormItem label="End Date">
-            {getFieldDecorator('endDate')(
-              <DatePicker />
-            )}
+            {getFieldDecorator('endDate')(<DatePicker />)}
           </FormItem>
         </Form>
       </Modal>
@@ -84,18 +63,13 @@ class AddAction extends React.Component {
 
 const AddActionModal = Form.create({
   // This method maps modal props into form initial values
-  mapPropsToFields: (props) => {
-    const fieldObj = _.mapValues(props.modalTask, (val, key) => {
+  mapPropsToFields: props => {
+    return _.mapValues(props.modalData, (val, key) => {
       if (key === 'startDate' || key === 'endDate') {
-        return Form.createFormField({
-          value: moment(val)
-        })
+        return Form.createFormField({ value: moment(val) });
       }
-      return Form.createFormField({
-        value: val
-      })
+      return Form.createFormField({ value: val });
     });
-    return fieldObj;
   }
 })(AddAction);
 

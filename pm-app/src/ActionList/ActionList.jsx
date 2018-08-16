@@ -4,10 +4,10 @@ import axios from 'axios';
 import _ from 'lodash';
 
 import AddActionModal from './AddActionModal';
-import { CurrentUserContext } from '../context';
+import { CurrentUserContext } from '../common/context';
 import './ActionList.css';
 import api from '../api';
-import util from '../util';
+import util from '../common/util';
 
 class ActionList extends React.Component {
   constructor(props) {
@@ -15,12 +15,17 @@ class ActionList extends React.Component {
     const location = this.props.location;
     this.modalTask = {};
     if (location.state) {
+      // get data from the persist state
       this.modalTask = this.props.location.state.modalTask;
     }
     this.state = {
       addActionModalVisible: false,
       addActionModalLoading: false,
-      actions: []
+      actions: [],
+      actionModal: {
+        data: {},
+        isEditModal: false
+      }
     };
   }
 
@@ -51,7 +56,6 @@ class ActionList extends React.Component {
       const payload = values;
       payload.creator = this.props.userId;
       payload.parent = this.modalTask._id;
-      console.log(payload);
       axios.post(api.createAction, payload)
         .then(() => {
           thisObj.setState({
@@ -71,6 +75,28 @@ class ActionList extends React.Component {
     });
   }
 
+  updateAction = () => {
+    this.setState({
+      addActionModalLoading: true
+    });
+    const form = this.formRef.props.form;
+    // extend the original task values to the new one
+    form.validateFields((err, values) => {
+      if (err) return;
+      axios.post(api.updateAction ,_.extend(this.state.actionModal.data, values))
+        .then(res => {
+          this.setState({
+            addActionModalVisible: false,
+            addActionModalLoading: false
+          });
+          this.loadActions();
+        })
+        .catch(err => {
+          util.handleError(err);
+        })
+    });
+  }
+
   showAddActionModal = () => {
     this.setState({
       addActionModalVisible: true
@@ -78,31 +104,45 @@ class ActionList extends React.Component {
   }
 
   closeAddActionModal = () => {
-    this.setState({
-      addActionModalVisible: false
+    this.setState(prevState => {
+      // reset the state of modal
+      prevState.addActionModalVisible = false;
+      prevState.actionModal.data = null;
+      prevState.actionModal.isEditModal = false;   
+      return prevState;   
     });
+  }
+
+  onActionClick = item => {
+    // 如果是编辑action
+    if (item) {
+      this.setState(prevState => {
+        prevState.actionModal.data = item;
+        prevState.actionModal.isEditModal = true;
+        return prevState;
+      });
+    }
+    this.showAddActionModal();
   }
 
   onActionCheck = (_id, e) => {
     const actions = this.state.actions;
     const ind = _.findIndex(actions, { _id });
     if (ind >= 0) {
-      actions[ind].progress = e.target.checked 
-        ? 100
-        : 0;
+      actions[ind].progress = e.target.checked ? 100 : 0;
     }
-    this.setState({
-      actions
-    });
+    this.setState({ actions });
   }
 
   render() {
     const renderItem = item => (
       <List.Item>
-        {item.progress === 100 
-          ? <del>{`${item.title}`}</del>
-          : item.title
-        }
+        <div className="item-content" onClick={this.onActionClick.bind(this, item)}>
+          {item.progress === 100 
+            ? <del>{`${item.title}`}</del>
+            : item.title
+          }
+        </div>
         <Checkbox onChange={this.onActionCheck.bind(this, item._id)}></Checkbox>
       </List.Item>
     );
@@ -112,8 +152,11 @@ class ActionList extends React.Component {
           visible={this.state.addActionModalVisible}
           confirmLoading={this.state.addActionModalLoading}
           onCreate={this.addAction}
+          onUpdate={this.updateAction}
           onCancel={this.closeAddActionModal}
           wrappedComponentRef={formRef => { this.formRef = formRef }}
+          isEditModal={this.state.actionModal.isEditModal}
+          modalData={this.state.actionModal.data}
         />
         <Icon type="left"
           onClick={() => { this.props.history.go(-1); }}

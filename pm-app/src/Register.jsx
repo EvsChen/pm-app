@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Icon, Input, Button } from 'antd';
-import { handleSuccess } from './util';
+import { handleSuccess } from './common/util';
 
 import api from './api';
 const FormItem = Form.Item;

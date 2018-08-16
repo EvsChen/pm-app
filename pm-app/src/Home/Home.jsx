@@ -4,7 +4,7 @@ import axios from 'axios';
 import moment from 'moment';
 
 import './Home.css';
-import { CurrentUserContext } from '../context';
+import { CurrentUserContext } from '../common/context';
 import api from '../api';
 import TaskCard from '../common/TaskCard';
 

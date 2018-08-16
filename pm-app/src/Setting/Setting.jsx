@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from 'antd';
 import './Setting.css';
-import { CurrentUserContext } from '../context';
+import { CurrentUserContext } from '../common/context';
 
 class Setting extends React.Component {
   logOut = () => {

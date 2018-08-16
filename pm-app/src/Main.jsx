@@ -6,7 +6,8 @@ import './Main.css';
 
 import Index from './Home/Home';
 import Organization from './Organization/Organization';
-import Diagram from './Diagram/Diagram';
+import File from './File/File';
+import DiagramHolder from './Diagram/DiagramHolder';
 import Setting from './Setting/Setting';
 import ActionList from './ActionList/ActionList';
 
@@ -24,7 +25,6 @@ const pathList = [
 class Main extends React.Component {
   constructor(props) {
     super(props);
-    console.log(pathList.indexOf(this.props.location.pathname));
     const current = pathList.indexOf(this.props.location.pathname) > 0
       ? pathList.indexOf(this.props.location.pathname).toString()
       : '0';
@@ -106,8 +106,9 @@ class Main extends React.Component {
         </Sider>
         <Layout>
           <Route exact path={`${this.props.match.path}`} component={Index} />
-          <Route path={`${this.props.match.path}/diagram`} component={Diagram} />
+          <Route path={`${this.props.match.path}/diagram`} component={DiagramHolder} />
           <Route path={`${this.props.match.path}/organization`} component={Organization} />
+          <Route path={`${this.props.match.path}/file`} component={File} />
           <Route path={`${this.props.match.path}/setting`} component={Setting} />
           <Route path={`${this.props.match.path}/action`} component={ActionList} />
         </Layout>

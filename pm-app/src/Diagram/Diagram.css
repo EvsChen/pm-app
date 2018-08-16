@@ -67,3 +67,11 @@
 .first-add-p {
   margin-top: 200px;
 }
+
+form .file-select {
+  width: 80%;
+}
+
+form .file-select + a {
+  margin-left: 10px;
+}

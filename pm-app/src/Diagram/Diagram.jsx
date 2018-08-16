@@ -5,14 +5,12 @@ import axios from 'axios';
 
 import api from '../api';
 import './Diagram.css';
-import { CurrentUserContext } from '../context';
 import DetailModal from './DetailModal';
 import AddTaskModal from './AddTaskModal';
 import Joystick from './Joystick';
-import util from '../util';
+import util from '../common/util';
 
 const confirm = Modal.confirm;
-const Option = Select.Option;
 const joint = window.joint;
 const svgAsPngUri = window.svgAsPngUri;
 
@@ -67,6 +65,28 @@ class Diagram extends React.Component {
     }
   }
 
+
+  initDiagram = () => {
+    const graph = new joint.dia.Graph();
+    this.graph = graph;
+    const paper = new joint.dia.Paper({
+      el: document.getElementById('holder'),
+      model: graph,
+      width: window.innerWidth + 200,
+      height: window.innerHeight,
+      gridSize: 10,
+      drawGrid: true
+    });
+    this.paper = paper;
+    this.initPaperEvents(paper);
+  }
+
+  initPaperEvents = paper =>{
+    this.initPopover(paper);
+    this.initConnectByDropping(paper);
+    this.initRemoveLinkTool(paper);
+  }
+
   addTask = () => {
     this.setState({
       isEditModal: false,
@@ -90,11 +110,10 @@ class Diagram extends React.Component {
           id: task._id
         })
           .then(() => {
-            console.log('Remove successful');
             this.removeTaskFromPaper(task);
           })
           .catch(err => {
-            console.log('Remove fail');
+            util.handleError(err);
           })
       }
       else {
@@ -196,6 +215,7 @@ class Diagram extends React.Component {
       });
     }
     else {
+      // default position
       taskParams.positionX = taskParams.positionX || 30;
       taskParams.positionY = taskParams.positionY || 30;
       const rect =
@@ -241,13 +261,12 @@ class Diagram extends React.Component {
       .addTo(this.graph);
   }
 
+  // connect link and add to data
   buildLink = (sourceCell, targetCell) => {
     const link = this.connectLink(sourceCell, targetCell);
     if (this.tasks[sourceCell.cid] && this.tasks[targetCell.cid]) {
       const sourceTask = this.tasks[sourceCell.cid];
       const targetTask = this.tasks[targetCell.cid];
-      console.log(sourceTask);
-      console.log(targetTask);
       _.isArray(sourceTask.linkTo)
         ? sourceTask.linkTo.push(targetTask._id)
         : sourceTask.linkTo = [targetTask._id];
@@ -306,7 +325,7 @@ class Diagram extends React.Component {
           }
         })
         .catch(err => {
-          this.handleError(err);
+          util.handleError(err);
         })
     });
   }
@@ -324,6 +343,7 @@ class Diagram extends React.Component {
       if (err) return;
       this.updateTasks(_.extend(this.state.modalTask, values))
         .then(res => {
+          util.handleSuccess('更新成功');
           this.setState({
             visible: false,
             confirmLoading: false
@@ -331,20 +351,17 @@ class Diagram extends React.Component {
           this.reloadTasks();
         })
         .catch(err => {
-          this.handleError(err);
+          util.handleError(err);
         })
     });
   }
 
+  // fired when the addTaskModal is cancelled
   onCancel = () => {
     this.setState({
-      visible: false
+      visible: false,
+      modalTask: {}
     });
-  }
-
-
-  handleError = err => {
-    console.error(err);
   }
 
   removeTaskFromPaper = task => {
@@ -353,22 +370,7 @@ class Diagram extends React.Component {
     delete this.tasks[cid];
   }
 
-  initDiagram = () => {
-    const geometry = window.g;
-    const graph = new joint.dia.Graph();
-    this.graph = graph;
-    const paper = new joint.dia.Paper({
-      el: document.getElementById('holder'),
-      model: graph,
-      width: window.innerWidth + 200,
-      height: window.innerHeight,
-      gridSize: 10,
-      drawGrid: true
-    });
-    this.paper = paper;
-    console.log(graph);
-    console.log(paper);
-
+  initPopover = paper => {
     // show cell popover
     paper.on('cell:pointerdown', (cellView, evt, evtX, evtY) => {
       if (cellView && cellView.model && !cellView.model.isLink()) {
@@ -393,17 +395,22 @@ class Diagram extends React.Component {
           this.closePopover();
           paper.off('blank:pointerdown', onBlankPointerDown);
         }).bind(this);
+        paper.on('blank:pointerdown', onBlankPointerDown);
 
         const onCellPointerMove = (function () {
           this.closePopover();
           paper.off('cell:pointermove', onCellPointerMove);
         }).bind(this);
-        paper.on('blank:pointerdown', onBlankPointerDown);
+        // 拖动时关闭popover
         paper.on('cell:pointermove', onCellPointerMove);
       }
     });
+  }
 
+  initConnectByDropping = paper => {
     // connect by dropping
+    const geometry = window.g;
+    const graph = paper.model;
     paper.on('cell:pointerup', (cellView, evt, x, y) => {
       // Find the first element below that is not a link nor the dragged element itself.
       const elementBelow = graph.get('cells').find(function (cell) {
@@ -419,15 +426,16 @@ class Diagram extends React.Component {
       if (elementBelow && !_.includes(graph.getNeighbors(elementBelow), cellView.model)) {
         this.buildLink(cellView.model, elementBelow);
         // Move the element a bit to the side.
-        cellView.model.translate(-20, 0);
+        cellView.model.translate(-30, 0);
       }
       return false;
     });
+  }
 
-    // add remove button to link 
+  // add remove button to link 
+  initRemoveLinkTool = paper => {
     paper.on('link:pointerdown', (linkView, evt, x, y) => {
       evt.stopPropagation();
-      console.log(linkView);
       this.addToolsToLink(linkView);
       const onBlankPointerDown = (evt, x, y) => {
         linkView.hideTools();
@@ -444,6 +452,7 @@ class Diagram extends React.Component {
     }
   }
 
+  // get this.tasks by id
   getTaskById = id => {
     let result;
     _.forIn(this.tasks, task => {
@@ -468,6 +477,7 @@ class Diagram extends React.Component {
     axios.post(api.getByRootTask, { id: this.props.rootTaskId })
       .then(res => {
         if (res.data.length > 0) {
+          // draw task rects
           this.buildRect(res.data);
           _.forIn(this.tasks, task => {
             if (_.isArray(task.linkTo) && task.linkTo.length > 0) {
@@ -550,17 +560,6 @@ class Diagram extends React.Component {
         svgUri: uri
       });
     });
-    // saveSvgAsPng(document.querySelector('#holder svg'), 'flowchart.png');
-    // const svgData = $('#holder svg')[0].outerHTML;
-    // const svgBlob = new Blob([svgData], { type: "image/png;charset=utf-8" });
-    // const svgUrl = URL.createObjectURL(svgBlob);
-    // const downloadLink = document.createElement('a');
-    // downloadLink.target = '_blank';
-    // downloadLink.href = svgUrl;
-    // downloadLink.download = 'flowchart.png';
-    // document.body.appendChild(downloadLink);
-    // downloadLink.click();
-    // document.body.removeChild(downloadLink);
   }
 
   render() {
@@ -643,210 +642,4 @@ class Diagram extends React.Component {
   }
 }
 
-class DiagramHolder extends React.Component {
-  state = {
-    loading: true,
-    rootTasks: [],
-    selectedTaskId: '',
-    visible: false,
-    confirmLoading: false,
-    showSubTask: false,
-    selectedSubTask: {},
-    taskTree: []
-  }
-
-  componentDidMount() {
-    this.loadRootTasks();
-  }
-
-  onCreate = () => {
-    this.setState({
-      confirmLoading: true
-    });
-    const form = this.formRef.props.form;
-    const thisObj = this;
-    form.validateFields((err, values) => {
-      if (err) return;
-      const payload = {
-        tasks: []
-      };
-      values.isRoot = true;
-      values.creator = this.props.userId;
-      payload.tasks.push(this.filterData(values));
-      axios.post(api.createTask, payload)
-        .then(() => {
-          console.log('success');
-          thisObj.setState({
-            visible: false,
-            confirmLoading: false
-          });
-          thisObj.loadRootTasks();
-        })
-        .catch(err => {
-          console.error(err);
-          thisObj.setState({
-            visible: false,
-            confirmLoading: false
-          });
-        });
-    });
-  }
-
-  onCancel = () => {
-    this.setState({
-      visible: false
-    });
-  }
-
-  onChange = val => {
-    this.setState({
-      selectedTaskId: val
-    });
-  }
-
-  loadRootTasks = () => {
-    axios.post(api.getRootTask, {
-      id: this.props.userId
-    })
-      .then(res => {
-        this.setState({
-          rootTasks: res.data,
-          loading: false,
-          selectedTaskId: res.data[0]._id
-        });
-      })
-      .catch(err => {
-        this.setState({
-          loading: false
-        });
-      });
-  }
-
-  showModal = () => {
-    this.setState({
-      visible: true
-    });
-  }
-
-  saveFormRef = formRef => {
-    this.formRef = formRef;
-  }
-
-  filterData = task => {
-    const newTask = _.omitBy(task, (val, key) => {
-      if (!val) return true;
-      else if (key === 'modifier') return true;
-      else if (key === 'rect') return true;
-      else return false;
-    });
-    return newTask;
-  }
-
-  showSubTask = selectedSubTask => {
-    this.setState(prevState => {
-      const taskTree = prevState.taskTree;
-      taskTree.push({
-        _id: prevState.selectedTaskId,
-        task: prevState.selectedSubTask
-      });
-      return {
-        selectedSubTask,
-        selectedTaskId: selectedSubTask._id,
-        showSubTask: true,
-        taskTree
-      }
-    });
-  }
-
-  returnToUpperTask = () => {
-    this.setState(prevState => {
-      const taskTree = prevState.taskTree;
-      const upperTask = taskTree.pop();
-      return {
-        selectedSubTask: upperTask.task,
-        selectedTaskId: upperTask._id,
-        showSubTask: !(taskTree.length === 0),
-        taskTree
-      }
-    });
-  }
-
-  render() {
-    let content;
-    if (this.state.loading) {
-      content = <Spin size="large" />;
-    }
-    else {
-      // if no root tasks
-      if (this.state.rootTasks.length === 0) {
-        content = (
-          <React.Fragment>
-            <p className="first-add-p">
-              It seems you don't have any tasks, try clicking the "add" button
-                 </p>
-            <Button
-              type="primary"
-              id="addFlow"
-              onClick={this.showModal}>Add</Button>
-          </React.Fragment>
-        );
-      }
-      // if root tasks
-      else {
-        const taskOptions = this.state.rootTasks.map((task) =>
-          <Option key={task._id} value={task._id}>{task.title}</Option>
-        );
-        content = (
-          <React.Fragment>
-            <div className="root-task-select" style={{ width: window.innerWidth }}>
-              {
-                this.state.showSubTask
-                  ? (
-                    <React.Fragment>
-                      <Icon type="left" onClick={this.returnToUpperTask}
-                        style={{
-                          float: 'left'
-                        }} />
-                      <span>{this.state.selectedSubTask.title}</span>
-                    </React.Fragment>
-                  )
-                  : (
-                    <React.Fragment>
-                      <Select placeholder="Select task" defaultValue={this.state.selectedTaskId} style={{ width: 120 }} onChange={this.onChange}>
-                        {taskOptions}
-                      </Select>
-                      <Icon type="plus" onClick={this.showModal} />
-                    </React.Fragment>
-                  )
-              }
-            </div>
-            <Diagram
-              rootTaskId={this.state.selectedTaskId}
-              userId={this.props.userId}
-              onViewSubTask={this.showSubTask}
-            />
-          </React.Fragment>
-        );
-      }
-    }
-    return (
-      <React.Fragment>
-        <AddTaskModal
-          wrappedComponentRef={this.saveFormRef}
-          visible={this.state.visible}
-          onCreate={this.onCreate}
-          onCancel={this.onCancel}
-          confirmLoading={this.state.confirmLoading}
-        />
-        {content}
-      </React.Fragment>
-    )
-  }
-}
-
-// In order to use userId as a common prop
-export default props => (
-  <CurrentUserContext.Consumer>
-    {({ id }) => <DiagramHolder {...props} userId={id} />}
-  </CurrentUserContext.Consumer>
-);
+export default Diagram;

@@ -4,7 +4,7 @@ import axios from 'axios';
 import {polyfill} from "mobile-drag-drop";
 import _ from 'lodash';
 
-import { CurrentUserContext } from '../context';
+import { CurrentUserContext } from '../common/context';
 import AddPersonModal from './AddPersonModal';
 import api from '../api';
 import './Organization.css';
@@ -56,16 +56,12 @@ class Organization extends React.Component {
       forceApply: true,
       iterationInterval: 50,
     });
-    // window.addEventListener('touchmove',function(){});
-    // window.addEventListener('dragenter',function(evt){
-    //   evt.preventDefault();
-    // });
   }
 
   componentWillUnmount() {
     console.log('Organization unmount');
-    const newOrganization = this.convertTreeToOrganization(this.state.treeData);
     console.log(newOrganization);
+    const newOrganization = this.convertTreeToOrganization(this.state.treeData);
     this.updateTaskOrganization(newOrganization);
   }
 
@@ -192,7 +188,6 @@ class Organization extends React.Component {
     else {
       message.error(Object.prototype.toString(err), 2.5);
     }
-    console.log(err);
   }
 
   addPersonToTree = person => {
@@ -220,7 +215,6 @@ class Organization extends React.Component {
         createPerson(person)
         .then(res => {
           if (res.data) {
-            console.log(res.data);
             addPersonToTree(res.data);
           }
           setState({

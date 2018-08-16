@@ -5,6 +5,7 @@
   "dependencies": {
     "@types/react": "^16.4.6",
     "antd": "^3.6.2",
+    "aws-sdk": "^2.291.0",
     "axios": "^0.18.0",
     "babel-plugin-import": "^1.8.0",
     "gh-pages": "^1.2.0",

@@ -4,11 +4,12 @@ import {
   Route,
   Redirect
 } from 'react-router-dom';
+
 import Login from './Login';
 import Main from './Main';
 import Register from './Register';
 import './App.css';
-import { CurrentUserContext } from './context';
+import { CurrentUserContext } from './common/context';
 
 const isAuthenticated = () => {
   if (localStorage.getItem('userId')) {
@@ -67,6 +68,7 @@ class App extends Component {
       <Router>
         <CurrentUserContext.Provider value={this.state.user}>
           <div className="App">
+            <Route exact path="/" render={() => <Redirect to="/home"/> }/>
             <PrivateRoute path="/home" component={Main} />
             <Route
               path="/login"
