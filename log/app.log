@@ -1,7 +1,0 @@
-[2018-08-17T11:38:05.965] [INFO] default - Successfully connected to mongodb://localhost:27017/pm-app
-[2018-08-17T11:39:07.174] [INFO] default - Received get root by user id
-[2018-08-17T11:46:39.535] [INFO] default - Received get root by user id
-[2018-08-17T11:46:55.095] [INFO] default - Received get root by user id
-[2018-08-17T11:47:01.344] [INFO] default - Received get root by user id
-[2018-08-17T11:47:03.573] [INFO] default - Received get root by user id
-[2018-08-17T11:47:08.207] [INFO] default - Received get root by user id

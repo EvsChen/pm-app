@@ -4,6 +4,7 @@ const cors = require('cors');
 const log4js = require('log4js');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const _ = require('lodash');
 const app = express();
 
 // set up logger configuration
@@ -26,15 +27,24 @@ app.use(session({
 
 // app.use('/public', express.static(path.join(__dirname, '/pm-app/build')));
 // app.get('/', (req, res) => {
-//   res.sendFile(path.join(`${__dirname}/pm-app/build/index.html`));
-// });
-
+  //   res.sendFile(path.join(`${__dirname}/pm-app/build/index.html`));
+  // });
+  
 const baseApiPath = '/api/v1/';
 const baseApi = str => baseApiPath.concat(str);
-app.use(baseApi('users'), require(`.${baseApiPath}users`));
-app.use(baseApi('tasks'), require(`.${baseApiPath}tasks`));
-app.use(baseApi('persons'), require(`.${baseApiPath}persons`));
-app.use(baseApi('actions'), require(`.${baseApiPath}actions`));
+app.use(baseApi('log'), express.static(path.join(__dirname, '/log')));
+
+const buildRouters = actionType => {
+  if (_.isArray(actionType)) {
+    _.forEach(actionType, item => {
+      buildRouters(item);
+    });
+  }
+  else {
+    app.use(baseApi(actionType), require(`.${baseApiPath}${actionType}`));
+  }
+};
+buildRouters(['users', 'tasks', 'persons', 'actions']);
 
 app.listen(PORT, () => {
   logger.$trace(`server has been started on localhost:${PORT}`);
