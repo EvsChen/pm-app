@@ -32,7 +32,6 @@ module.exports = {
 };
 
 function create(params) {
-  console.log(params);
   const deferred = Q.defer();
   const doc = new Person(params);
   doc.save((err, res) => {

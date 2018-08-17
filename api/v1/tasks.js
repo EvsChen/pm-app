@@ -2,6 +2,7 @@ const express = require('express');
 const _ = require('lodash');
 
 const TaskService = require('../../services/tasks');
+const logger = require('../../common/logger');
 
 const router = express.Router();
 
@@ -40,8 +41,8 @@ function query(req, res) {
         res.status(200).send(result);
       })
       .catch(err => {
-        console.log(err);
         res.status(400).send(err);
+        logger.$error(err);
       });
   }
 }
@@ -53,8 +54,8 @@ function remove(req, res) {
         res.status(200).send(result);
       })
       .catch(err => {
-        console.log(err);
         res.status(400).send(err);
+        logger.$error(err);
       });
   }
 }
@@ -62,7 +63,6 @@ function remove(req, res) {
 // TODO: consider changing to a simpler create function
 function create(req, res) {
   if (req.body) {
-    console.log(req.body);
     const promiseArr = [];
     req.body.tasks.forEach((task) => {
       if (task._id) {
@@ -149,7 +149,7 @@ function get(req, res) {
 }
 
 function getRootByUserId(req, res) {
-  console.log('Received get root by user id');
+  logger.info('Received get root by user id');
   if (req.body) {
     TaskService.getRootByUserId(req.body.id)
       .then(taskArr => {

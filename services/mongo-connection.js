@@ -1,5 +1,6 @@
-const config = require('../config.json');
 const mongoose = require('mongoose');
+const config = require('../config.json');
+const logger = require('../common/logger');
 
 let connectionString;
 if (process.env.PORT || config.testMongo) {
@@ -10,10 +11,9 @@ else{
 }
 
 mongoose.connect(connectionString,connectionOptions = {})
-  .then(() => { console.log(`Successfully connected to ${connectionString}`); })
+  .then(() => { logger.info(`Successfully connected to ${connectionString}`); })
   .catch(err => { 
-    console.log(`Connection to ${connectionString} has failed`);
-    console.log(err);
+    logger.error(`Connection to ${connectionString} has failed`);
   });
 
 mongoose.Promise = global.Promise;

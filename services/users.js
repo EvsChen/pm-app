@@ -1,10 +1,10 @@
 const Q = require('q');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 
-const config = require('../config.json');
 const mongoose = require('./mongo-connection');// pack mongoose connection into one module
+const logger = require('../common/logger');
+
 const Schema = mongoose.Schema;
 const userSchema = new Schema({
     username: {
@@ -64,6 +64,7 @@ function authenticate(username, password) {
             if (bcrypt.compareSync(password, user.hash)) {
               // authentication successful
               console.log('Authenticate success');
+              logger.trace('Authenticate success')
               console.log(user);
               deferred.resolve({ id: user._id, role: user.role, firstName: user.firstName });
             }
