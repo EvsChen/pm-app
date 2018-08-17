@@ -1,12 +1,12 @@
 import React from 'react';
-import { Layout, Card, Icon, Avatar, Select } from 'antd';
+import { Layout, Select } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
 
 import './Home.css';
 import { CurrentUserContext } from '../common/context';
 import api from '../api';
-import TaskCard from '../common/TaskCard';
+import TaskCard from './TaskCard';
 
 const { Header, Content } = Layout;
 const Option = Select.Option;

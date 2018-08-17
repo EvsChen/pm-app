@@ -224,8 +224,12 @@ class Diagram extends React.Component {
           .resize(100, 40)
           .attr({
             body: {
-              fill: 'blue',
-              'stroke-opacity': .7
+              fill: 'rgb(73, 85, 208)',
+              stroke: 'white',
+              rx: 10,
+              ry: 10,
+              'stroke-opacity': .7,
+              'stroke-width': 5
             },
             label: {
               text: taskParams.title || 'init',
@@ -635,7 +639,6 @@ class Diagram extends React.Component {
             <Icon type="delete" onClick={this.showRemoveModal} />
             <Icon type="edit" onClick={this.editTask} />
           </div>
-          <Icon type="close" onClick={this.closePopover} />
         </div>
       </React.Fragment>
     )

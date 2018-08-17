@@ -7,7 +7,7 @@ class DetailModal extends React.Component {
   render() {
     // Here we lift the visible state up, as well as the onCreate method
     const { onViewSubTask, visible, onCancel, modalTask } = this.props;
-    return (
+    return (  
       <Modal title="View task detail"
         visible={visible}
         bodyStyle={{
@@ -17,6 +17,7 @@ class DetailModal extends React.Component {
         footer={null}
         onCancel={onCancel}
         style={{ top: 50 }}
+        className="task-detail-modal"
       >
         <Button type="primary" onClick={onViewSubTask}>Show subtasks</Button>
         <Link to={{

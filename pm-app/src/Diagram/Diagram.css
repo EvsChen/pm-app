@@ -55,15 +55,6 @@
 .cell-popover .action i {
   margin: 5px;
 }
-
-.cell-popover .anticon-close {
-  font-size: 15px;
-  cursor: pointer;
-  position: absolute;
-  right: 5px;
-  top: 5px;
-}
-
 .first-add-p {
   margin-top: 200px;
 }
@@ -74,4 +65,13 @@ form .file-select {
 
 form .file-select + a {
   margin-left: 10px;
+}
+
+.task-detail-modal .ant-modal-body {
+  text-align: center
+}
+
+.task-detail-modal .ant-btn {
+  margin: 10px 20px;
+  width: 50%;
 }

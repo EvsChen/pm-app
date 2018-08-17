@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Icon, Avatar } from 'antd';
+import { Layout, Menu, Icon } from 'antd';
 import { Link, Route } from 'react-router-dom';
 
 import './Main.css';
@@ -55,7 +55,6 @@ class Main extends React.Component {
           onCollapse={this.onCollapse}
         >
           <div className="sider-info">
-            <Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
             <div className="sider-info-position">
               <span className="sider-info-position-name">Jason</span>
               <br />

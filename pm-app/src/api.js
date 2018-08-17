@@ -5,9 +5,10 @@ const buildApi = str => {
     const ifTest = hostname === 'localhost'
       || /^192/.test(hostname)
       || /^172/.test(hostname);
+    const backendHost = 'backendHost';
     const baseApi = ifTest
       ? `http://${hostname}:3001/api/v1`
-      : `http://${hostname}/api/v1`;
+      : `http://${backendHost}/api/v1`;
     return `${baseApi}${str}`;
 };
 
