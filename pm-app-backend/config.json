@@ -1,0 +1,8 @@
+{
+  "useMongo": true,
+  "useFileLogger": false,
+  "connectionString": "mongodb://localhost:27017/pm-app",
+  "cloudConnectionString": "mongodb+srv://someuser:e1SQmqNSeSIooo5X@pm-app-eqo74.mongodb.net/pm-app?retryWrites=true",
+  "localUrl": "http://localhost:3001/api",
+  "secret": "THIS IS A GREAT APP"
+}

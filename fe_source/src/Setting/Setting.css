@@ -1,0 +1,9 @@
+#logOut {
+  margin: 20px;
+}
+
+#logOut .ant-btn {
+  width: 200px;
+  display: block;
+  margin: 10px auto;
+}

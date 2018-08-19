@@ -36,12 +36,3 @@ By default the eb env is hosted without https certificate. To enable this, see [
 Without a custom domain name (not ending in "elasticbeanstalk.com"), it seems that we cannot use AWS Certificate Manager (ACM) to provide a valid ssl certificate for the website. Though it seems very strange, the reason is that you're not the owner of the domain. But it self didn't support https though. 
 
 A possible workaround is to sign a certificate using [OpenSSL](https://www.openssl.org/source/) on the local machine. And then upload the certificate onto AWS IAM, which is also described in the doc above.
-
-### Deployment with Zeit
-There seems to be some problem with AWS. Today I can't connect to the api server anymore. The problem is again with the certificate. So I change to a lighter deployment with zeit. 
-
-The deployment itself is very simple. Simply install the cli tool and run command. There seems to be some problem with my local connection to the mongodb cloud server. But the problems solves after deploying on the cloud. 
-
-Also, unlike traditional deployment, there is no such thing as `process.env.PORT`, which usually serves as a default port selection. So it cannot be used to determine the env by this.
-
-By default you can't read or write file on the zeit server. So I need to find out a better way to save logs.

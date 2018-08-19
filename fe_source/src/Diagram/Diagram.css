@@ -1,0 +1,79 @@
+#holder {
+  left: 0;
+  top: 0;
+  touch-action: none;
+  position: absolute;
+}
+
+.action-button {
+  position: absolute;
+  bottom: 20px;
+  height: 30px;
+}
+
+#addFlow {
+  width: 60px;
+}
+
+#saveFlow {
+  bottom: 20px;
+}
+
+.root-task-select {
+  position: absolute;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  z-index: 999;
+}
+
+.root-task-select .ant-select {
+  vertical-align: top;
+}
+
+.root-task-select i {
+  font-size: 20px;
+  margin-left: 20px;
+  line-height: 32px;
+}
+
+.diagram-container {
+  position: relative;
+  overflow-x: auto;
+}
+
+.cell-popover {
+  font-size: 30px;
+  background-color: rgba(255, 255, 255, 0.7);
+  position: absolute;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 5px;
+  /* popover display above the header select */
+  z-index: 9999;
+}
+
+.cell-popover .action i {
+  margin: 5px;
+}
+.first-add-p {
+  margin-top: 200px;
+}
+
+form .file-select {
+  width: 80%;
+}
+
+form .file-select + a,
+form .file-select + button
+{
+  margin-left: 10px;
+}
+
+.task-detail-modal .ant-modal-body {
+  text-align: center
+}
+
+.task-detail-modal .ant-btn {
+  margin: 10px 20px;
+  width: 50%;
+}
