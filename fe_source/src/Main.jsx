@@ -9,7 +9,7 @@ import Organization from './Organization/Organization';
 import File from './File/File';
 import DiagramHolder from './Diagram/DiagramHolder';
 import Setting from './Setting/Setting';
-import ActionList from './ActionList/ActionList';
+import Action from './Action/ActionContainer';
 
 const { Sider } = Layout;
 
@@ -109,7 +109,7 @@ class Main extends React.Component {
           <Route path={`${this.props.match.path}/organization`} component={Organization} />
           <Route path={`${this.props.match.path}/file`} component={File} />
           <Route path={`${this.props.match.path}/setting`} component={Setting} />
-          <Route path={`${this.props.match.path}/action`} component={ActionList} />
+          <Route path={`${this.props.match.path}/action`} component={Action} />
         </Layout>
       </Layout>
     );

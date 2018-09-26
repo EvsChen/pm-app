@@ -86,6 +86,9 @@ class File extends React.Component {
         loading={this.state.loading}
         dataSource={this.state.fileList}
         renderItem={renderItem}
+        style={{
+          paddingLeft: 30
+        }}
       />
       <Upload {...uploaderProps}>
         <Button>

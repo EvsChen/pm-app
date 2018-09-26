@@ -6,7 +6,6 @@ const buildApi = str => {
     const hostname = window.location.hostname;
     // const backendHost = 'pm-app-env.uwa3mts8vm.us-east-1.elasticbeanstalk.com';
     // USING HTTPS!!!!!!
-    const backendHost = 'https://react-node-uhsazcfjni.now.sh';
     // config优先级最高
     const ifLocal = !config.useOnlineEnv 
       && (hostname === 'localhost'
@@ -14,14 +13,14 @@ const buildApi = str => {
       || /^172/.test(hostname));
     const baseApi = ifLocal
       ? `http://${hostname}:3001/api/v1`
-      : `${backendHost}/api/v1`;
+      : `${config.apiServer}/api/v1`;
     return `${baseApi}${str}`;
 };
 
 const api = {
     registerUser : buildApi('/users/create'),
     authenticateUser: buildApi('/users/authenticate'),
-    
+    // Task related routes
     createTask: buildApi('/tasks/create'),
     updateTask: buildApi('/tasks/update'),
     removeTask: buildApi('/tasks/remove'),

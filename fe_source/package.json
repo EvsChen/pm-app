@@ -29,7 +29,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
-  "proxy": "http://localhost:3001/",
+  "proxy": "https://react-node-uhsazcfjni.now.sh/",
   "devDependencies": {
     "awesome-typescript-loader": "^5.2.0",
     "source-map-loader": "^0.2.3",

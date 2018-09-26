@@ -7,14 +7,9 @@ import _ from 'lodash';
 const FormItem = Form.Item;
 const Option = Select.Option;
 // FIXME: consider changing date into 12:00 AM
-class AddAction extends React.Component {
-  state = {
-    personArray: []
-  }
-
+class ActionModalForm extends React.Component {
   render() {
-    // Here we lift the visible state up, as well as the onCreate method
-    const { form, confirmLoading, visible, onCreate, onUpdate, onCancel, isEditModal } = this.props;
+    const { form, confirmLoading, visible, onCreate, onUpdate, onCancel, isEditModal, personArray } = this.props;
     const { getFieldDecorator } = form;
     return (
       <Modal title={isEditModal ? 'Update action' : 'Create new action'}
@@ -42,7 +37,7 @@ class AddAction extends React.Component {
             {getFieldDecorator('owner')(
               <Select>
                 {
-                  this.state.personArray.map(val => 
+                  personArray.map(val => 
                     <Option value={val.key} key={val.key}>{val.title}</Option>
                   )
                 }
@@ -61,8 +56,7 @@ class AddAction extends React.Component {
   }
 }
 
-const AddActionModal = Form.create({
-  // This method maps modal props into form initial values
+const ActionModalContainer = Form.create({
   mapPropsToFields: props => {
     return _.mapValues(props.modalData, (val, key) => {
       if (key === 'startDate' || key === 'endDate') {
@@ -71,16 +65,18 @@ const AddActionModal = Form.create({
       return Form.createFormField({ value: val });
     });
   }
-})(AddAction);
+})(ActionModalForm);
 
-AddActionModal.propTypes = {
-  onCreate: PropTypes.func,
+ActionModalContainer.propTypes = {
+  onCreate: PropTypes.func.isRequired,
   onUpdate: PropTypes.func,
-  onCancel: PropTypes.func,
-  wrappedComponentRef: PropTypes.func,
+  onCancel: PropTypes.func.isRequired,
+  wrappedComponentRef: PropTypes.func.isRequired,
   isEditModal: PropTypes.bool,
-  visible: PropTypes.bool,
-  confirmLoading: PropTypes.bool
+  modalData: PropTypes.object,
+  visible: PropTypes.bool.isRequired,
+  confirmLoading: PropTypes.bool,
+  personArray: PropTypes.array
 };
 
-export default AddActionModal;
+export default ActionModalContainer;

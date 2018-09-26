@@ -1,3 +1,7 @@
+/**
+ * @file common/s3.js - 封装部分实用的s3功能 存储在sessionStorage中以加快访问速度
+ * @author evschen
+ */
 import AWS from 'aws-sdk';
 
 const albumBucketName = 'elasticbeanstalk-us-east-1-905484802142';
@@ -18,9 +22,18 @@ const s3 = new AWS.S3({
 
 export const getUserFileKey = id => encodeURIComponent(id) + '/';
 
-// TODO: save file list to backend to increase speed
+export const buildFileStorageKey = userId => `${userId}_FILE`;
+
+
+// TODO: consider using redux to store global status?
 export const loadFileList = userId => {
   const userFileKey = getUserFileKey(userId);
+  const fileStorageKey = buildFileStorageKey(userId);
+  if (window.sessionStorage.getItem(fileStorageKey)) {
+    console.log('Load file from session');
+    const sessionListObj = JSON.parse(window.sessionStorage.getItem(fileStorageKey));
+    return Promise.resolve(sessionListObj);
+  }
   return new Promise((resolve, reject) => {
     s3.listObjects({Prefix: userFileKey}, function(err, data) {
       const href = this.request.httpRequest.endpoint.href;
@@ -33,6 +46,8 @@ export const loadFileList = userId => {
         reject(err);
       }
       resolve(data.Contents);
+      window.sessionStorage.setItem(fileStorageKey,
+        JSON.stringify(data.Contents));
     });
   });
 }

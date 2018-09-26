@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Modal, Select, Icon, Spin } from 'antd';
+import { Button, Modal, Icon, Spin } from 'antd';
 import _ from 'lodash';
 import axios from 'axios';
 
@@ -7,16 +7,17 @@ import api from '../api';
 import './Diagram.css';
 import DetailModal from './DetailModal';
 import AddTaskModal from './AddTaskModal';
-import Joystick from './Joystick';
+import TaskDetail from '../components/TaskDetail';
 import util from '../common/util';
 
 const confirm = Modal.confirm;
 const joint = window.joint;
 const svgAsPngUri = window.svgAsPngUri;
 
-const POPOVER_WIDTH = 140;
+const POPOVER_WIDTH = 180;
 const POPOVER_HEIGHT = 50;
 const POPOVER_MARGIN = 5;
+const DIAGRAM_INIT_WIDTH = window.innerWidth + 200;
 
 // TODO: consider the two-finger zooming: how to handle?
 class Diagram extends React.Component {
@@ -28,12 +29,16 @@ class Diagram extends React.Component {
       canSave: false,
       loading: true,
       visible: false,
+      taskLoading: false,
       detailModalVisible: false,
+      taskDetailModalVisible: false,
       saveImgModalVisible: false,
       confirmLoading: false,
       showPopover: false,
       popoverX: 0,
       popoverY: 0,
+      diagramX: 0,
+      diagramY: 0,
       isEditModal: false,
       modalTask: {}
     }
@@ -72,7 +77,7 @@ class Diagram extends React.Component {
     const paper = new joint.dia.Paper({
       el: document.getElementById('holder'),
       model: graph,
-      width: window.innerWidth + 200,
+      width: DIAGRAM_INIT_WIDTH,
       height: window.innerHeight,
       gridSize: 10,
       drawGrid: true
@@ -85,6 +90,7 @@ class Diagram extends React.Component {
     this.initPopover(paper);
     this.initConnectByDropping(paper);
     this.initRemoveLinkTool(paper);
+    this.initDiagramDragging(paper);
   }
 
   addTask = () => {
@@ -198,6 +204,13 @@ class Diagram extends React.Component {
       onCancel() {
         console.log('Cancel');
       },
+    });
+  }
+
+  showTaskDetailModal = () => {
+    this.closePopover();
+    this.setState({
+      taskDetailModalVisible: true
     });
   }
 
@@ -316,10 +329,8 @@ class Diagram extends React.Component {
     const form = this.formRef.props.form;
     form.validateFields((err, values) => {
       if (err) return;
-      console.log(values);
       this.createTasks(values)
         .then(res => {
-          console.log(res);
           if (res && res.data.length > 0) {
             this.buildRect(res.data[0]);
             this.setState({
@@ -372,6 +383,46 @@ class Diagram extends React.Component {
     const cid = task.rect.cid;
     task.rect.remove();
     delete this.tasks[cid];
+  }
+
+  initDiagramDragging = paper => {
+    paper.on('blank:pointerdown', this.onDiagramTouchStart);
+  }
+
+  onDiagramTouchStart = (evt, evtX, evtY) =>{
+    evt.preventDefault();
+    window.addEventListener('touchmove', this.onDiagramTouchMove, { passive: false });
+    window.addEventListener('touchend', this.onDiagramTouchEnd, { passive: false });
+    this.setState({
+      startX: evt.pageX || evt.touches[0].pageX,
+      startY: evt.pageY || evt.touches[0].pageY
+    });
+  }
+
+  onDiagramTouchMove = evt => {
+    evt.preventDefault();
+    const nowX = evt.pageX || evt.touches[0].pageX;
+    const nowY = evt.pageY || evt.touches[0].pageY;
+    const moveRatio = 2;
+    const moveX = (nowX - this.state.startX) / moveRatio;
+    const moveY = (nowY - this.state.startY) / moveRatio;
+    const startDiagramX = this.state.diagramX;
+    const startDiagramY = this.state.diagramY;
+    // 如果左边到边界了，不可移动
+    const diagramX = startDiagramX + moveX > 0
+      ? 0
+      // 如果右边到边界了
+      : (startDiagramX + moveX + DIAGRAM_INIT_WIDTH - window.innerWidth) < 0
+        ? window.innerWidth - DIAGRAM_INIT_WIDTH
+        : startDiagramX + moveX;
+    // TODO: change the y param here
+    const diagramY = startDiagramY;
+    this.setState({ diagramX, diagramY });
+  }
+
+  onDiagramTouchEnd = evt => {
+    window.removeEventListener('touchmove', this.onDiagramTouchMove);
+    window.removeEventListener('touchend', this.onDiagramTouchEnd);
   }
 
   initPopover = paper => {
@@ -478,6 +529,9 @@ class Diagram extends React.Component {
   }
 
   loadTasks = () => {
+    this.setState({
+      taskLoading: true
+    });
     axios.post(api.getByRootTask, { id: this.props.rootTaskId })
       .then(res => {
         if (res.data.length > 0) {
@@ -494,6 +548,9 @@ class Diagram extends React.Component {
             }
           });
         }
+        this.setState({
+          taskLoading: false
+        });
       });
   };
 
@@ -575,7 +632,14 @@ class Diagram extends React.Component {
           onCancel={() => { this.setState({saveImgModalVisible: false}) }}
         >
           Long press to save the image
-          <img width="300" src={this.state.svgUri} />
+          <img width="300" src={this.state.svgUri} alt="diagram"/>
+        </Modal>
+        <Modal
+          visible={this.state.taskDetailModalVisible}
+          onCancel={() => {this.setState({ taskDetailModalVisible: false })}}
+          footer={false}
+        >
+          <TaskDetail task={this.state.modalTask}/>
         </Modal>
         <AddTaskModal
           id="addTaskModal"
@@ -594,37 +658,43 @@ class Diagram extends React.Component {
           visible={this.state.detailModalVisible}
           onViewSubTask={this.viewSubTaskHandler}
         />
-        <div className="diagram-container" style={{
-          height: window.innerHeight,
-          width: window.innerWidth
-        }}>
-          <div id="holder"></div>
-          <Button
-            type="primary"
-            className="action-button"
-            onClick={this.exportToImg}
-            style={{
-              left: window.innerWidth - 225,
-            }}>Export</Button>
-          <Button
-            type="primary"
-            id="saveFlow"
-            className="action-button"
-            disabled={!this.state.canSave}
-            onClick={this.saveFlow}
-            style={{
-              left: window.innerWidth - 145,
-            }}>Save</Button>
-          <Button
-            type="primary"
-            id="addFlow"
-            className="action-button"
-            onClick={this.addTask}
-            style={{
-              left: window.innerWidth - 75,
-            }}>Add</Button>
-          <Joystick targetId="holder" />
-        </div>
+        <Spin size="large" spinning={this.state.taskLoading}>
+          <div className="diagram-container" style={{
+            height: window.innerHeight,
+            width: window.innerWidth
+          }}>
+            <div id="holder"
+              style={{
+                left: this.state.diagramX,
+                top: this.state.diagramY
+              }}
+            ></div>
+            <Button
+              type="primary"
+              className="action-button"
+              onClick={this.exportToImg}
+              style={{
+                left: window.innerWidth - 225,
+              }}>Export</Button>
+            <Button
+              type="primary"
+              id="saveFlow"
+              className="action-button"
+              disabled={!this.state.canSave}
+              onClick={this.saveFlow}
+              style={{
+                left: window.innerWidth - 145,
+              }}>Save</Button>
+            <Button
+              type="primary"
+              id="addFlow"
+              className="action-button"
+              onClick={this.addTask}
+              style={{
+                left: window.innerWidth - 75,
+              }}>Add</Button>
+          </div>
+        </Spin>
         <div className="cell-popover"
           style={{
             display: this.state.showPopover ? 'block' : 'none',
@@ -635,6 +705,7 @@ class Diagram extends React.Component {
           }}
         >
           <div className="action">
+            <Icon type="eye-o" onClick={this.showTaskDetailModal} />
             <Icon type="profile" onClick={this.showDetailModal} />
             <Icon type="delete" onClick={this.showRemoveModal} />
             <Icon type="edit" onClick={this.editTask} />
